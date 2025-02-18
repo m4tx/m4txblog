@@ -1,0 +1,9 @@
+/target/
+/nginx/
+Dockerfile
+*.dockerfile
+docker-compose.yml
+README.md
+bootstrap/dist
+bootstrap/build
+.git/

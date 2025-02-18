@@ -1,0 +1,18 @@
+{% extends "_base.html" %}
+
+{% block title %}{{ post.title }} | Blog{% endblock %}
+
+{% block content -%}
+<div class="container">
+    <div class="row">
+        {%- let page = post -%}
+
+        <div class="col blogpost mt-3 px-lg-3 px-xl-5 py-2" data-bs-spy="scroll" data-bs-target="#page-toc" data-bs-offset="0" tabindex="0">
+            <h1>{{ post.title }}</h1>
+            <p class="blog-post-meta">{{ post.date.format("%d %B %Y") }}</p>
+
+            {{- post.content_html|safe -}}
+        </div>
+    </div>
+</div>
+{%- endblock %}
