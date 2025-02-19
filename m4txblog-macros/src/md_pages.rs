@@ -83,6 +83,7 @@ pub(super) fn parse_md_page(link: &str) -> MdPage {
 
     let mut options = comrak::Options::default();
     options.extension.table = true;
+    options.extension.strikethrough = true;
     options.extension.front_matter_delimiter = Some("---".to_string());
     options.parse.smart = true;
     options.render.unsafe_ = true;
