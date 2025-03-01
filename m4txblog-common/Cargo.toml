@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
-comrak = "0.35"
+comrak = "0.36"
 serde = "1"
