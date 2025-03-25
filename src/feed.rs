@@ -8,10 +8,14 @@ use cot::response::{Response, ResponseExt};
 use cot::{Body, StatusCode};
 use m4txblog_common::md_pages::MdPage;
 
-use crate::posts::get_posts;
+use crate::posts::get_unarchived_post_map;
 
 static BLOG_FEED: LazyLock<Feed> = LazyLock::new(|| {
-    let posts: Vec<_> = get_posts().clone().into_values().collect();
+    let posts: Vec<_> = get_unarchived_post_map()
+        .clone()
+        .into_values()
+        .map(|post_list| post_list.into_iter().next().unwrap())
+        .collect();
     let builder = BlogFeedBuilder::new(&posts);
     builder.build()
 });
@@ -61,7 +65,7 @@ impl<'a> BlogFeedBuilder<'a> {
             .authors(Self::get_authors())
             .generator(
                 GeneratorBuilder::default()
-                    .value("m4txblog powered by cot.rs")
+                    .value(crate::consts::GENERATOR)
                     .uri("https://github.com/m4tx/m4txblog".to_owned())
                     .build(),
             )

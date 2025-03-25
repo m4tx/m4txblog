@@ -40,6 +40,7 @@ pub(super) fn quote_md_page(md_page: &MdPage) -> TokenStream {
     let title = &md_page.title;
     let date_str = md_page.date.to_rfc3339();
     let content_html = &md_page.content_html;
+    let language = &md_page.language;
     let sections = md_page.sections.iter().map(quote_section);
 
     quote! {
@@ -48,6 +49,7 @@ pub(super) fn quote_md_page(md_page: &MdPage) -> TokenStream {
             title: String::from(#title),
             date: chrono::DateTime::parse_from_rfc3339(#date_str).unwrap(),
             content_html: String::from(#content_html),
+            language: String::from(#language),
             sections: vec![#(#sections),*],
         }
     }
@@ -116,6 +118,7 @@ pub(super) fn parse_md_page(link: &str) -> MdPage {
         title: front_matter.title,
         date: front_matter.date,
         content_html: md_page_content,
+        language: front_matter.language.unwrap_or_else(|| "en".to_string()),
         sections: root_section.children,
     }
 }

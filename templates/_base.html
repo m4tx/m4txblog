@@ -1,13 +1,13 @@
 {%- let urls = base_context.urls -%}
 
 <!DOCTYPE html>
-<html lang="en" class="h-100">
+<html lang="{% if post is defined %}{{ post.language }}{% else %}en{% endif %}" class="h-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="Mateusz Maćkowski">
     <meta name="keywords" content="devblog, home, personal, programming, rust, cot">
-    <meta name="generator" content="m4txblog based on Cot framework">
+    <meta name="generator" content="{{ crate::consts::GENERATOR }}">
     <title>{% block title %}{% endblock %} | Mateusz Maćkowski</title>
 
     <script src="/static/js/color-modes.js"></script>

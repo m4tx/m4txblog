@@ -1,6 +1,8 @@
+pub mod consts;
 mod feed;
 mod posts;
 
+use askama::Template;
 use cot::bytes::Bytes;
 use cot::cli::CliMetadata;
 use cot::config::ProjectConfig;
@@ -14,11 +16,10 @@ use cot::static_files::StaticFilesMiddleware;
 use cot::{AppBuilder, Body, BoxedHandler, StatusCode, static_files};
 use indexmap::IndexMap;
 use m4txblog_common::md_pages::MdPage;
-use m4txblog_macros::md_page;
-use rinja::Template;
+use m4txblog_macros::{md_page, static_files_dir};
 
 use crate::feed::blog_feed;
-use crate::posts::get_posts;
+use crate::posts::{get_archived_post_map, get_post_map, get_unarchived_post_map};
 
 #[derive(Debug, Clone)]
 struct BaseContext {
@@ -38,38 +39,96 @@ impl FromRequestParts for BaseContext {
 #[derive(Debug, Template)]
 #[template(path = "index.html")]
 struct IndexTemplate<'a> {
-    posts: &'a IndexMap<String, MdPage>,
+    posts: &'a IndexMap<String, Vec<MdPage>>,
     base_context: &'a BaseContext,
 }
 
 async fn index(base_context: BaseContext) -> cot::Result<Response> {
-    let posts = get_posts();
+    let posts = get_unarchived_post_map();
 
     let index_template = IndexTemplate {
         posts,
         base_context: &base_context,
     };
-    let rendered = index_template.render()?;
 
-    Ok(Response::new_html(StatusCode::OK, Body::fixed(rendered)))
+    Ok(Response::new_html(
+        StatusCode::OK,
+        Body::fixed(index_template.render()?),
+    ))
+}
+
+#[derive(Debug, Template)]
+#[template(path = "archive.html")]
+struct ArchiveTemplate<'a> {
+    posts: &'a IndexMap<String, Vec<MdPage>>,
+    base_context: &'a BaseContext,
+}
+
+async fn archive(base_context: BaseContext) -> cot::Result<Response> {
+    let posts = get_archived_post_map();
+
+    let archive_template = ArchiveTemplate {
+        posts,
+        base_context: &base_context,
+    };
+
+    Ok(Response::new_html(
+        StatusCode::OK,
+        Body::fixed(archive_template.render()?),
+    ))
 }
 
 #[derive(Debug, Template)]
 #[template(path = "post.html")]
 struct PostTemplate<'a> {
     post: &'a MdPage,
+    other_languages: &'a [String],
     base_context: &'a BaseContext,
 }
 
 async fn post(base_context: BaseContext, Path(page): Path<String>) -> cot::Result<Response> {
-    page_response(&base_context, &page)
+    page_response(&base_context, &page, None)
 }
 
-fn page_response(base_context: &BaseContext, page: &str) -> cot::Result<Response> {
-    let post_map = get_posts();
-    let post = post_map.get(page).ok_or_else(cot::Error::not_found)?;
+async fn post_with_lang(
+    base_context: BaseContext,
+    Path((page, lang)): Path<(String, String)>,
+) -> cot::Result<Response> {
+    page_response(&base_context, &page, Some(&lang))
+}
 
-    let guide_template = PostTemplate { post, base_context };
+fn page_response(
+    base_context: &BaseContext,
+    page: &str,
+    lang: Option<&str>,
+) -> cot::Result<Response> {
+    let post_map = get_post_map();
+    let post_list = post_map.get(page).ok_or_else(cot::Error::not_found)?;
+
+    if Some(post_list[0].language.as_str()) == lang {
+        // the default language should be returned only by the `post` route
+        return Err(cot::Error::not_found());
+    }
+
+    let post = if let Some(lang) = lang {
+        post_list
+            .iter()
+            .find(|post| post.language == lang)
+            .ok_or_else(cot::Error::not_found)?
+    } else {
+        &post_list[0]
+    };
+    let other_languages = post_list
+        .iter()
+        .filter(|other_post| other_post.language != post.language)
+        .map(|post| post.language.clone())
+        .collect::<Vec<_>>();
+
+    let guide_template = PostTemplate {
+        post,
+        other_languages: &other_languages,
+        base_context,
+    };
 
     let rendered = guide_template.render()?;
     Ok(Response::new_html(StatusCode::OK, Body::fixed(rendered)))
@@ -106,20 +165,24 @@ impl App for CotSiteApp {
             Route::with_handler_and_name("/", index, "index"),
             Route::with_handler_and_name("/feed/", blog_feed, "feed"),
             Route::with_handler_and_name("/about-me/", about, "about"),
+            Route::with_handler_and_name("/archive/", archive, "archive"),
             Route::with_handler_and_name("/blog/{page}/", post, "post"),
+            Route::with_handler_and_name("/blog/{page}/{lang}/", post_with_lang, "post_with_lang"),
         ])
     }
 
     fn static_files(&self) -> Vec<(String, Bytes)> {
-        static_files!(
+        let mut files = static_files!(
             "css/main.css",
             "js/color-modes.js",
             "images/favicon-32.png",
             "images/favicon-180.png",
             "images/favicon-192.png",
             "images/favicon-512.png",
-            "images/site.webmanifest"
-        )
+            "images/site.webmanifest",
+        );
+        files.append(&mut static_files_dir!("images/blog/"));
+        files
     }
 }
 

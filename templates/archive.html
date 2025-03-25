@@ -1,0 +1,16 @@
+{% extends "_base.html" %}
+
+{% block title %}Post archive{% endblock %}
+
+{% block head -%}
+    <meta name="description" content="Mateusz Maćkowski's (aka m4tx) (dev)blog.">
+{%- endblock %}
+
+{% block content %}
+<div class="container px-4 py-5">
+    <h1>Post archive</h1>
+    <p class="mb-5">This contains posts that are over 5 years old which might not represent my current views, overall state of things, or might be outdated in other ways. Many of these are only available in Polish. You've been warned.</p>
+
+    {%- include "_post_list.html" -%}
+</div>
+{% endblock %}

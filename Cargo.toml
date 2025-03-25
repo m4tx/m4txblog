@@ -13,10 +13,11 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
+askama = "0.13"
 atom_syndication = "0.12"
 chrono = "0.4"
-comrak = "0.37"
-cot = { version = "0.2", default-features = false }
+comrak = "0.38"
+cot = { git = "https://github.com/cot-rs/cot.git", rev = "a6397666479bf6cf17b24809f1236038b988f671", default-features = false }
 grass = "0.13"
 indexmap = "2.7"
 lightningcss = "1.0.0-alpha.65"
@@ -24,7 +25,6 @@ m4txblog-common = { path = "m4txblog-common" }
 m4txblog-macros = { path = "m4txblog-macros" }
 proc-macro2 = "1"
 quote = "1"
-rinja = "0.3"
 serde = "1"
 serde_yml = "0.0.12"
 syn = "2"
@@ -34,13 +34,13 @@ syntect = "5"
 nightly = ["m4txblog-macros/nightly"]
 
 [dependencies]
+askama.workspace = true
 atom_syndication.workspace = true
 chrono.workspace = true
 cot = { workspace = true, features = ["live-reload"] }
 indexmap.workspace = true
 m4txblog-common.workspace = true
 m4txblog-macros.workspace = true
-rinja.workspace = true
 
 [build-dependencies]
 grass.workspace = true

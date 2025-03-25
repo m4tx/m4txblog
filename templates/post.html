@@ -5,11 +5,38 @@
 {% block content -%}
 <div class="container">
     <div class="row">
-        {%- let page = post -%}
-
         <div class="col blogpost mt-3 px-lg-3 px-xl-5 py-2" tabindex="0">
             <h1>{{ post.title }}</h1>
             <p class="blog-post-meta">{{ post.date.format("%d %B %Y") }}</p>
+
+            {%- if post.is_archived() -%}
+            <div class="alert alert-danger" role="alert">
+            {%- if post.language == "pl" -%}
+                <h4 class="alert-heading">{% include "icons/warning.svg" %} Ostrzeżenie</h4>
+
+                Ten post został <strong>opublikowany {{ post.years_ago() }} lat temu</strong>. Informacje mogą być przestarzałe, poglądy autora mogły ewoluować lub post może być nieaktualny w jakiś inny sposób. Weź to pod uwagę podczas czytania tego posta.
+            {%- else -%}
+                <h4 class="alert-heading">{% include "icons/warning.svg" %} Disclaimer</h4>
+
+                This post was <strong>published {{ post.years_ago() }} years ago</strong>. The information may no longer be current, the author's perspectives might have evolved, or the post might be outdated in some other way. Please consider this context when reading.
+            {%- endif -%}
+            </div>
+            {%- endif -%}
+
+            {%- let post = post -%}
+            {%- for lang in other_languages -%}
+            <div class="alert alert-info" role="alert">
+            {%- if lang == "pl" -%}
+                <h4 class="alert-heading">{% include "icons/flag_pl.svg" %} Post dostępny po Polsku</h4>
+
+                <a href="{{ cot::reverse!(urls, "post_with_lang", page = post.link, lang = "pl")? }}">Kliknij tutaj</a> żeby przeczytać ten post po Polsku.
+            {%- elif lang == "en" -%}
+                <h4 class="alert-heading">{% include "icons/flag_uk.svg" %} Post available in English</h4>
+
+                <a href="{{ cot::reverse!(urls, "post", page = post.link)? }}">Click here</a> to read this post in English.
+            {%- endif -%}
+            </div>
+            {%- endfor -%}
 
             {{- post.content_html|safe -}}
         </div>
