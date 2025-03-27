@@ -12,7 +12,41 @@ We've posted news about releasing the framework in a few places where the Rust c
 
 ## What's new
 
-Perhaps the biggest change in this release is the adoption of extractors for request handlers. This change allows you to extract data, such as path parameters, request body, form data, and others, from the request and pass it to the handler as arguments. This is a common pattern in Rust web frameworks nowadays (mainly in Axum and dependent ones), and we're happy to bring it to Cot. This change makes the request handlers much more ergonomic and easier to test, but this is also a part of a bigger plan to introduce automatic [OpenAPI spec](https://www.openapis.org/) generation soon. The change moves the dependencies of each request handler to the type system, which makes it accessible for the framework to introspect the handler and generate the spec automatically. This means that soon you'll be able to have a nice API documentation and even try out the API directly from the browser—all without any additional work from your side!
+Perhaps the biggest change in this release is the adoption of extractors for request handlers. This change allows you to extract data, such as path parameters, request body, form data, and others, from the request and pass it to the handler as arguments. This is a common pattern in Rust web frameworks nowadays (mainly in Axum and dependent ones), and we're happy to bring it to Cot. For instance, instead of writing:
+
+```rust
+async fn modify_todo(request: Request) -> cot::Result<Response> {
+    let todo_id: i32 = request.path_params().parse()?;
+    let db = request.db();
+    let todo_data: TodoData = request.json();
+
+    let todo = query!(TodoItem, $id == todo_id)
+        .get(db)
+        .await?;
+    todo.title = todo_data.title;
+
+    // ...
+}
+```
+
+You can now write:
+
+```rust
+async fn modify_todo(
+    RequestDb(db): RequestDb,
+    Path(todo_id): Path<i32>,
+    Json(data): Json<TodoData>,
+) -> cot::Result<Response> {
+    let todo = query!(TodoItem, $id == todo_id)
+        .get(db)
+        .await?;
+    todo.title = todo_data.title;
+
+    // ...
+}
+```
+
+This change makes the request handlers much more ergonomic and easier to test, but this is also a part of a bigger plan to introduce automatic [OpenAPI spec](https://www.openapis.org/) generation soon. The change moves the dependencies of each request handler to the type system, which makes it accessible for the framework to introspect the handler and generate the spec automatically. This means that soon you'll be able to have a nice API documentation and even try out the API directly from the browser—all without any additional work from your side!
 
 Among other bigger changes, there is a support now for removing models and fields in the automatic migration generator in our ORM. The admin panel has now a basic support for pagination. `SessionMiddleware` now can be configured not to use `Secure` cookie for storing session ID, which fixes problems with signing in on localhost in WebKit-based browsers, such as Safari or GNOME Web. These changes were all contributed by the community—thanks a lot for this!
 
