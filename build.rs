@@ -25,8 +25,10 @@ fn build_css() {
             stylesheet
                 .minify(lightningcss::stylesheet::MinifyOptions::default())
                 .expect("failed to minify CSS");
-            let mut printer_options = lightningcss::stylesheet::PrinterOptions::default();
-            printer_options.minify = true;
+            let printer_options = lightningcss::stylesheet::PrinterOptions {
+                minify: true,
+                ..Default::default()
+            };
             stylesheet
                 .to_css(printer_options)
                 .expect("failed to print minified CSS")
