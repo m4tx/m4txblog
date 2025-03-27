@@ -1,4 +1,4 @@
-{%- let request = request -%}
+{%- let urls = base_context.urls -%}
 
 <!DOCTYPE html>
 <html lang="en" class="h-100">
@@ -29,7 +29,7 @@
 
 <nav class="navbar navbar-expand-lg fixed-top theme-bg" data-bs-theme="dark">
     <div class="container">
-        <a class="navbar-brand" href="{{ cot::reverse!(request, "index")? }}" aria-label="Go to homepage">Mateusz Maćkowski</a>
+        <a class="navbar-brand" href="{{ cot::reverse!(urls, "index")? }}" aria-label="Go to homepage">Mateusz Maćkowski</a>
         <button class="ms-auto navbar-toggler p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#cot-offcanvas-navbar" aria-controls="cot-offcanvas-navbar" aria-label="Toggle navigation">
             <svg class="bi"><use href="#three-dots"></use></svg>
         </button>
@@ -39,10 +39,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body">
-                {%- let route_name = request.route_name().unwrap_or_default() -%}
+                {%- let route_name = base_context.route_name -%}
                 <ul class="navbar-nav flex-grow-1 pe-3">
                     <li class="nav-item">
-                        <a class="nav-link{% if route_name == "about" %} active{% endif %}" href="{{ cot::reverse!(request, "about")? }}">About me</a>
+                        <a class="nav-link{% if route_name == "about" %} active{% endif %}" href="{{ cot::reverse!(urls, "about")? }}">About me</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="https://github.com/m4tx">GitHub</a>

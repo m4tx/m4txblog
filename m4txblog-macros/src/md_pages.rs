@@ -42,7 +42,7 @@ pub(super) fn quote_md_page(md_page: &MdPage) -> TokenStream {
     let content_html = &md_page.content_html;
     let sections = md_page.sections.iter().map(quote_section);
 
-    let md_page = quote! {
+    quote! {
         m4txblog_common::md_pages::MdPage {
             link: String::from(#link),
             title: String::from(#title),
@@ -50,8 +50,7 @@ pub(super) fn quote_md_page(md_page: &MdPage) -> TokenStream {
             content_html: String::from(#content_html),
             sections: vec![#(#sections),*],
         }
-    };
-    md_page.into()
+    }
 }
 
 fn quote_section(section: &Section) -> TokenStream {
@@ -60,15 +59,14 @@ fn quote_section(section: &Section) -> TokenStream {
     let anchor = &section.anchor;
     let children = section.children.iter().map(quote_section);
 
-    let section = quote! {
+    quote! {
         m4txblog_common::md_pages::Section {
             level: #level,
             title: String::from(#title),
             anchor: String::from(#anchor),
             children: vec![#(#children),*],
         }
-    };
-    section.into()
+    }
 }
 
 pub(super) fn parse_md_page(link: &str) -> MdPage {
@@ -110,17 +108,16 @@ pub(super) fn parse_md_page(link: &str) -> MdPage {
 
     let md_page_content =
         comrak::markdown_to_html_with_plugins(&md_page_content, &options, &plugins);
-    let mut sections = heading_adapter.sections.lock().unwrap().clone();
-    let root_section = fix_section_children(&mut sections);
+    let sections = heading_adapter.sections.lock().unwrap().clone();
+    let root_section = fix_section_children(&sections);
 
-    let md_page = MdPage {
+    MdPage {
         link: front_matter.permalink,
         title: front_matter.title,
         date: front_matter.date,
         content_html: md_page_content,
         sections: root_section.children,
-    };
-    md_page
+    }
 }
 
 fn fix_section_children(sections: &Vec<Section>) -> Section {

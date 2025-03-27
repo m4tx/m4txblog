@@ -3,10 +3,12 @@ mod posts;
 use cot::bytes::Bytes;
 use cot::cli::CliMetadata;
 use cot::config::ProjectConfig;
+use cot::http::request::Parts;
 use cot::project::{App, MiddlewareContext, Project, RegisterAppsContext, RootHandlerBuilder};
-use cot::request::{Request, RequestExt};
+use cot::request::RequestExt;
+use cot::request::extractors::{FromRequestParts, Path};
 use cot::response::{Response, ResponseExt};
-use cot::router::{Route, Router};
+use cot::router::{Route, Router, Urls};
 use cot::static_files::StaticFilesMiddleware;
 use cot::{AppBuilder, Body, BoxedHandler, StatusCode, static_files};
 use indexmap::IndexMap;
@@ -16,19 +18,34 @@ use rinja::Template;
 
 use crate::posts::get_posts;
 
+#[derive(Debug, Clone)]
+struct BaseContext {
+    urls: Urls,
+    route_name: String,
+}
+
+impl FromRequestParts for BaseContext {
+    async fn from_request_parts(parts: &mut Parts) -> cot::Result<Self> {
+        let urls = Urls::from_request_parts(parts).await?;
+        let route_name = parts.route_name().unwrap_or_default().to_owned();
+
+        Ok(Self { urls, route_name })
+    }
+}
+
 #[derive(Debug, Template)]
 #[template(path = "index.html")]
 struct IndexTemplate<'a> {
     posts: &'a IndexMap<String, MdPage>,
-    request: &'a Request,
+    base_context: &'a BaseContext,
 }
 
-async fn index(request: Request) -> cot::Result<Response> {
+async fn index(base_context: BaseContext) -> cot::Result<Response> {
     let posts = get_posts();
 
     let index_template = IndexTemplate {
         posts,
-        request: &request,
+        base_context: &base_context,
     };
     let rendered = index_template.render()?;
 
@@ -39,20 +56,18 @@ async fn index(request: Request) -> cot::Result<Response> {
 #[template(path = "post.html")]
 struct PostTemplate<'a> {
     post: &'a MdPage,
-    request: &'a Request,
+    base_context: &'a BaseContext,
 }
 
-async fn post(request: Request) -> cot::Result<Response> {
-    let page = request.path_params().parse()?;
-
-    page_response(&request, page)
+async fn post(base_context: BaseContext, Path(page): Path<String>) -> cot::Result<Response> {
+    page_response(&base_context, &page)
 }
 
-fn page_response(request: &Request, page: &str) -> cot::Result<Response> {
+fn page_response(base_context: &BaseContext, page: &str) -> cot::Result<Response> {
     let post_map = get_posts();
     let post = post_map.get(page).ok_or_else(cot::Error::not_found)?;
 
-    let guide_template = PostTemplate { post, request };
+    let guide_template = PostTemplate { post, base_context };
 
     let rendered = guide_template.render()?;
     Ok(Response::new_html(StatusCode::OK, Body::fixed(rendered)))
@@ -62,13 +77,13 @@ fn page_response(request: &Request, page: &str) -> cot::Result<Response> {
 #[template(path = "md_page.html")]
 struct MdPageTemplate<'a> {
     page: &'a MdPage,
-    request: &'a Request,
+    base_context: &'a BaseContext,
 }
 
-async fn about(request: Request) -> cot::Result<Response> {
+async fn about(base_context: BaseContext) -> cot::Result<Response> {
     let template = MdPageTemplate {
         page: &md_page!("about"),
-        request: &request,
+        base_context: &base_context,
     };
 
     Ok(Response::new_html(

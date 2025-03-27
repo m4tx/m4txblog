@@ -5,7 +5,7 @@
 {% block content -%}
 <div class="container">
     <div class="row">
-        <div class="col blogpost mt-3 px-lg-3 px-xl-5" data-bs-spy="scroll" data-bs-target="#page-toc" data-bs-offset="0" tabindex="0">
+        <div class="col blogpost mt-3 px-lg-3 px-xl-5" tabindex="0">
             <h1>{{ page.title }}</h1>
 
             {{- page.content_html|safe -}}
