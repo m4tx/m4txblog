@@ -1,6 +1,7 @@
 <div align="center">
 <h1><a href="https://mackow.ski">m4txblog</a></h1>
 
+[![Rust Build Status](https://github.com/m4tx/m4txblog/workflows/Rust%20CI/badge.svg)](https://github.com/m4tx/m4txblog/actions/workflows/rust.yml)
 [![Docker Build Status](https://github.com/m4tx/m4txblog/workflows/Docker%20Images/badge.svg)](https://github.com/m4tx/m4txblog/actions/workflows/docker.yml)
 </div>
 

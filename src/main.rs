@@ -3,12 +3,12 @@ mod posts;
 use cot::bytes::Bytes;
 use cot::cli::CliMetadata;
 use cot::config::ProjectConfig;
-use cot::project::{App, Project, RootHandlerBuilder, WithApps, WithConfig};
+use cot::project::{App, MiddlewareContext, Project, RegisterAppsContext, RootHandlerBuilder};
 use cot::request::{Request, RequestExt};
 use cot::response::{Response, ResponseExt};
 use cot::router::{Route, Router};
 use cot::static_files::StaticFilesMiddleware;
-use cot::{static_files, AppBuilder, Body, BoxedHandler, ProjectContext, StatusCode};
+use cot::{AppBuilder, Body, BoxedHandler, StatusCode, static_files};
 use indexmap::IndexMap;
 use m4txblog_common::md_pages::MdPage;
 use m4txblog_macros::md_page;
@@ -117,16 +117,16 @@ impl Project for CotSiteProject {
         Ok(ProjectConfig::default())
     }
 
-    fn register_apps(&self, modules: &mut AppBuilder, _app_context: &ProjectContext<WithConfig>) {
+    fn register_apps(&self, modules: &mut AppBuilder, _app_context: &RegisterAppsContext) {
         modules.register_with_views(CotSiteApp, "");
     }
 
     fn middlewares(
         &self,
         handler: RootHandlerBuilder,
-        context: &ProjectContext<WithApps>,
+        context: &MiddlewareContext,
     ) -> BoxedHandler {
-        let handler = handler.middleware(StaticFilesMiddleware::from_app_context(context));
+        let handler = handler.middleware(StaticFilesMiddleware::from_context(context));
         #[cfg(debug_assertions)]
         let handler = handler.middleware(cot::middleware::LiveReloadMiddleware::new());
         handler.build()

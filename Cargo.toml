@@ -12,17 +12,40 @@ members = [
 ]
 resolver = "2"
 
+[workspace.dependencies]
+chrono = "0.4"
+comrak = "0.37"
+cot = { version = "0.2", default-features = false }
+grass = "0.13"
+indexmap = "2.7"
+lightningcss = "1.0.0-alpha.65"
+m4txblog-common = { path = "m4txblog-common" }
+m4txblog-macros = { path = "m4txblog-macros" }
+proc-macro2 = "1"
+quote = "1"
+rinja = "0.3"
+serde = "1"
+serde_yml = "0.0.12"
+syn = "2"
+syntect = "5"
+
 [features]
 nightly = ["m4txblog-macros/nightly"]
 
 [dependencies]
-chrono = "0.4.40"
-cot = { package = "cot", git = "https://github.com/cot-rs/cot.git", rev = "d44b3b01b0b9720335a0f80a82634866c9195103", features = ["live-reload"]}
-indexmap = "2.7.0"
-m4txblog-common = { path = "m4txblog-common" }
-m4txblog-macros = { path = "m4txblog-macros" }
-rinja = "0.3.5"
+chrono.workspace = true
+cot = { workspace = true, features = ["live-reload"] }
+indexmap.workspace = true
+m4txblog-common.workspace = true
+m4txblog-macros.workspace = true
+rinja.workspace = true
 
 [build-dependencies]
-grass = "0.13.4"
-lightningcss = "1.0.0-alpha.63"
+grass.workspace = true
+lightningcss.workspace = true
+
+[package.metadata.cargo-machete]
+ignored = [
+    # used by the values returned by the md_guide! macro
+    "chrono",
+]

@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-chrono = { version = "0.4", features = ["serde"] }
-comrak = "0.36"
-serde = "1"
+chrono = { workspace = true, features = ["serde"] }
+comrak.workspace = true
+serde.workspace = true
