@@ -29,8 +29,8 @@ struct BlogFeedBuilder<'a> {
     posts: &'a [MdPage],
 }
 
-const WEBSITE_URL: &'static str = "https://mackow.ski/";
-const LANG: &'static str = "en";
+const WEBSITE_URL: &str = "https://mackow.ski/";
+const LANG: &str = "en";
 
 impl<'a> BlogFeedBuilder<'a> {
     fn new(posts: &'a [MdPage]) -> Self {
@@ -52,7 +52,7 @@ impl<'a> BlogFeedBuilder<'a> {
             )
             .link(
                 LinkBuilder::default()
-                    .href(format!("{WEBSITE_URL}"))
+                    .href(WEBSITE_URL.to_owned())
                     .rel("alternate")
                     .mime_type("text/html".to_owned())
                     .build(),
@@ -82,9 +82,17 @@ impl<'a> BlogFeedBuilder<'a> {
     }
 
     fn post_to_entry(post: &MdPage) -> Entry {
+        let url = format!("{WEBSITE_URL}blog/{}/", post.link);
         EntryBuilder::default()
             .title(&*post.title)
-            .id(format!("{WEBSITE_URL}blog/{}/", post.link))
+            .id(url.clone())
+            .link(
+                LinkBuilder::default()
+                    .href(url)
+                    .rel("alternate")
+                    .mime_type("text/html".to_owned())
+                    .build(),
+            )
             .authors(Self::get_authors())
             .updated(post.date)
             .published(post.date)
@@ -108,7 +116,7 @@ impl<'a> BlogFeedBuilder<'a> {
 
     fn last_updated(&self) -> chrono::DateTime<chrono::FixedOffset> {
         self.posts
-            .into_iter()
+            .iter()
             .map(|post| post.date)
             .max()
             .expect("no posts")
