@@ -1,3 +1,4 @@
+mod feed;
 mod posts;
 
 use cot::bytes::Bytes;
@@ -16,6 +17,7 @@ use m4txblog_common::md_pages::MdPage;
 use m4txblog_macros::md_page;
 use rinja::Template;
 
+use crate::feed::blog_feed;
 use crate::posts::get_posts;
 
 #[derive(Debug, Clone)]
@@ -102,6 +104,7 @@ impl App for CotSiteApp {
     fn router(&self) -> Router {
         Router::with_urls([
             Route::with_handler_and_name("/", index, "index"),
+            Route::with_handler_and_name("/feed/", blog_feed, "feed"),
             Route::with_handler_and_name("/about-me/", about, "about"),
             Route::with_handler_and_name("/blog/{page}/", post, "post"),
         ])
