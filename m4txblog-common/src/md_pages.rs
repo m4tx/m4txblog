@@ -11,7 +11,21 @@ pub struct MdPage {
     pub title: String,
     pub date: chrono::DateTime<chrono::FixedOffset>,
     pub content_html: String,
+    pub language: String,
     pub sections: Vec<Section>,
+}
+
+impl MdPage {
+    pub fn is_archived(&self) -> bool {
+        const ARCHIVE_YEARS: i64 = 5;
+
+        self.years_ago() >= ARCHIVE_YEARS
+    }
+
+    pub fn years_ago(&self) -> i64 {
+        let time_delta = chrono::Utc::now().fixed_offset() - self.date;
+        time_delta.num_days() / 365
+    }
 }
 
 impl From<&MdPage> for MdPageLink {
@@ -34,6 +48,7 @@ pub struct FrontMatter {
     pub title: String,
     pub permalink: String,
     pub date: chrono::DateTime<chrono::FixedOffset>,
+    pub language: Option<String>,
 }
 
 #[derive(Debug, Clone)]

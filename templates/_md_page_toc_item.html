@@ -1,8 +1,0 @@
-<li>
-    <a href="#{{ section.anchor }}">{{ section.title }}</a>
-    {%- if !section.children.is_empty() -%}<ul>{%- endif -%}
-    {%- for child in section.children -%}
-        {{ self::render_section(child) }}
-    {%- endfor -%}
-    {%- if !section.children.is_empty() -%}</ul>{%- endif -%}
-</li>

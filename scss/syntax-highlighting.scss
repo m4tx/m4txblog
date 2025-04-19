@@ -44,7 +44,7 @@ pre.syntax-highlighting {
     color: var(--syntax-highlighting-kw-color);
   }
 
-  .keyword.operator, .storage.modifier, .entity.attribute-name.html {
+  .keyword.operator, .storage.type.c, .storage.modifier, .entity.attribute-name.html, .variable.less {
     color: var(--syntax-highlighting-kw-2-color);
   }
 

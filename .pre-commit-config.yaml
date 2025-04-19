@@ -10,6 +10,7 @@ repos:
     rev: v5.0.0
     hooks:
       - id: check-added-large-files
+        args: ["--maxkb=2048"]
       - id: check-case-conflict
       - id: check-executables-have-shebangs
       - id: check-toml
@@ -52,3 +53,9 @@ repos:
       - id: hadolint
         files: (Dockerfile|.dockerfile)$
         types: [text]
+
+  - repo: https://github.com/shssoichiro/oxipng
+    rev: v9.1.4
+    hooks:
+      - id: oxipng
+        args: ["-o", "max", "--strip", "safe", "--alpha"]

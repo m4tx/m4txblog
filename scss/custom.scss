@@ -15,11 +15,15 @@ a {
 :root, [data-bs-theme=light] {
   --m4txblog-bg: #336699;
   --m4txblog-content-bg: #fff;
+  --blockquote-bg: #fafafa;
+  --blockquote-border: #eee;
 }
 
 [data-bs-theme=dark] {
   --m4txblog-bg: #08243e;
   --m4txblog-content-bg: #212529;
+  --blockquote-bg: #444;
+  --blockquote-border: #6c6c6c;
 }
 
 main {
@@ -118,38 +122,6 @@ h1 {
   }
 }
 
-.cot-toc {
-  #page-toc {
-    padding-right: 1rem;
-  }
-
-  ul {
-    list-style: none;
-    padding-left: 1rem;
-
-    li {
-      margin: .2rem 0;
-    }
-  }
-
-  nav {
-    font-size: .875rem;
-
-    a {
-      color: inherit;
-      text-decoration: none;
-
-      &:hover {
-        color: $primary;
-      }
-
-      &.active {
-        color: $primary;
-      }
-    }
-  }
-}
-
 .guide-chapters {
   ul {
     @extend .list-unstyled;
@@ -189,6 +161,10 @@ h1 {
   code {
     white-space: pre;
   }
+
+  img {
+    max-width: 100%;
+  }
 }
 
 .anchor-link {
@@ -218,6 +194,12 @@ button.navbar-toggler {
   border: 0;
 }
 
+.flag-icon {
+  width: 2em;
+  height: 1em;
+  vertical-align: -.125em;
+}
+
 .bi {
   width: 1em;
   height: 1em;
@@ -229,4 +211,17 @@ button.navbar-toggler {
   margin-left: -.5em;
   padding-left: .5em;
   padding-right: .5em;
+}
+
+blockquote {
+  background-color: var(--blockquote-bg);
+  padding: .75em 1.5em .1em;
+  border-left: .4em solid var(--blockquote-border);
+}
+
+figure {
+  figcaption {
+    font-family: $font-family-sans-serif;
+    text-align: center;
+  }
 }
