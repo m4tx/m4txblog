@@ -5,9 +5,11 @@
 {% block content -%}
 <div class="container">
     <div class="row">
-        <div class="col blogpost mt-3 px-lg-3 px-xl-5 py-2" tabindex="0">
-            <h1>{{ post.title }}</h1>
-            <p class="blog-post-meta">{{ post.date.format("%d %B %Y") }}</p>
+        <article class="col blogpost mt-3 px-lg-3 px-xl-5 py-2" tabindex="0">
+            <header>
+                <h1>{{ post.title }}</h1>
+                <time datetime="{{ post.date.to_rfc3339() }}" class="blog-post-meta">{{ post.date.format("%d %B %Y") }}</time>
+            </header>
 
             {%- if post.is_archived() -%}
             <div class="alert alert-danger" role="alert">
@@ -39,7 +41,7 @@
             {%- endfor -%}
 
             {{- post.content_html|safe -}}
-        </div>
+        </article>
     </div>
 </div>
 {%- endblock %}

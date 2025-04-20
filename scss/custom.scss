@@ -41,7 +41,14 @@ h1 {
 }
 
 .blog-post-meta {
+  font-family: $font-family-serif;
   font-size: .875rem;
+}
+
+article {
+  header {
+    margin-bottom: 1.5rem;
+  }
 }
 
 .theme-bg {

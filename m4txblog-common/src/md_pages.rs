@@ -13,6 +13,8 @@ pub struct MdPage {
     pub content_html: String,
     pub language: String,
     pub sections: Vec<Section>,
+    pub category: Option<String>,
+    pub tags: Vec<String>,
 }
 
 impl MdPage {
@@ -49,6 +51,8 @@ pub struct FrontMatter {
     pub permalink: String,
     pub date: chrono::DateTime<chrono::FixedOffset>,
     pub language: Option<String>,
+    pub category: Option<String>,
+    pub tags: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone)]
