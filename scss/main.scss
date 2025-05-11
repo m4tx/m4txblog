@@ -39,7 +39,7 @@ $container-max-widths: (
 
 // Layout & components
 @import "../bootstrap/scss/tables";
-//@import "../bootstrap/scss/forms";
+@import "../bootstrap/scss/forms";
 @import "../bootstrap/scss/buttons";
 @import "../bootstrap/scss/transitions";
 @import "../bootstrap/scss/dropdown";

@@ -30,11 +30,7 @@ fn get_files(base: &str, inner: &str) -> Vec<String> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
     let path = Path::new(&manifest_dir).join(base).join(inner);
 
-    #[cfg(feature = "nightly")]
-    {
-        let path_str = path.to_str().expect("path is not valid UTF-8");
-        proc_macro::tracked_path::path(path_str);
-    }
+    track_path(&path);
 
     if !path.exists() {
         panic!("Directory does not exist: {}", path.display());
@@ -60,3 +56,12 @@ fn get_files(base: &str, inner: &str) -> Vec<String> {
 
     entries
 }
+
+#[rustversion::nightly]
+fn track_path(path: &Path) {
+    let path_str = path.to_str().expect("path is not valid UTF-8");
+    proc_macro::tracked_path::path(path_str);
+}
+
+#[rustversion::not(nightly)]
+fn track_path(_path: &Path) {}
