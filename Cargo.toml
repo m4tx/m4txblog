@@ -12,12 +12,15 @@ members = [
 ]
 resolver = "2"
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(nightly)'] }
+
 [workspace.dependencies]
-askama = "0.13"
+askama = "0.14"
 atom_syndication = "0.12"
 chrono = "0.4"
 comrak = "0.38"
-cot = { git = "https://github.com/cot-rs/cot.git", rev = "a6397666479bf6cf17b24809f1236038b988f671", default-features = false }
+cot = { git = "https://github.com/cot-rs/cot.git", rev = "e1fec09dddb96806686d8c0e264d1c145c53304e", default-features = false }
 grass = "0.13"
 indexmap = "2.7"
 lightningcss = "1.0.0-alpha.65"
@@ -25,22 +28,26 @@ m4txblog-common = { path = "m4txblog-common" }
 m4txblog-macros = { path = "m4txblog-macros" }
 proc-macro2 = "1"
 quote = "1"
+rustversion = "1"
 serde = "1"
 serde_yml = "0.0.12"
 syn = "2"
-syntect = "5"
+syntect = { version = "5", default-features = false }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [features]
 nightly = ["m4txblog-macros/nightly"]
 
 [dependencies]
 askama.workspace = true
+async-trait = "0.1.88"
 atom_syndication.workspace = true
 chrono.workspace = true
-cot = { workspace = true, features = ["live-reload"] }
+cot = { workspace = true, features = ["sqlite", "live-reload"] }
 indexmap.workspace = true
 m4txblog-common.workspace = true
 m4txblog-macros.workspace = true
+tracing-subscriber.workspace = true
 
 [build-dependencies]
 grass.workspace = true

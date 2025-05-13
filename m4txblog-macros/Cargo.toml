@@ -9,14 +9,19 @@ proc-macro = true
 [features]
 nightly = []
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(nightly)'] }
+
 [dependencies]
 comrak.workspace = true
 m4txblog-common.workspace = true
 proc-macro2.workspace = true
 quote.workspace = true
+rustversion.workspace = true
 serde_yml.workspace = true
 syn.workspace = true
-syntect = { workspace = true, features = ["dump-load"] }
+syntect = { workspace = true, features = ["dump-load", "default-fancy"] }
 
 [build-dependencies]
-syntect = { workspace = true, features = ["dump-create"] }
+rustversion.workspace = true
+syntect = { workspace = true, features = ["dump-create", "default-fancy"] }

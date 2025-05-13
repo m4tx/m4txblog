@@ -68,26 +68,6 @@ article {
   }
 }
 
-.btn.btn-primary {
-  --bs-btn-color: #fff;
-
-  &:hover {
-    $btn-primary-bg-color-hover: #ea580c;
-
-    background-color: $btn-primary-bg-color-hover;
-    border-color: $btn-primary-bg-color-hover;
-    --bs-btn-hover-color: #fff;
-  }
-
-  &:active {
-    $btn-primary-bg-color-active: shade-color($primary, 30%);
-
-    background-color: $btn-primary-bg-color-active;
-    border-color: $btn-primary-bg-color-active;
-    --bs-btn-active-color: #fff;
-  }
-}
-
 .btn-lead {
   --bs-btn-padding-y: .75rem;
   --bs-btn-padding-x: 2rem;

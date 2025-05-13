@@ -1,6 +1,10 @@
 use syntect::parsing::SyntaxSetBuilder;
 
 fn main() {
+    if rustversion::cfg!(nightly) {
+        println!("cargo:rustc-cfg=nightly");
+    }
+
     build_syntax_highlighting_defs();
 
     println!("cargo:rerun-if-changed=build.rs");

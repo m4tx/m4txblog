@@ -6,6 +6,7 @@ use m4txblog_macros::md_page;
 
 static POSTS: LazyLock<IndexMap<String, Vec<MdPage>>> = LazyLock::new(|| {
     let posts = vec![
+        md_page!("2025-05-13-cot-v03-even-lazier"),
         md_page!("2025-03-26-introducing-cot-02"),
         md_page!("2025-03-26-hello-world-yet-again"),
         md_page!("2025-02-18-welcome-cot-the-rust-web-framework-for-lazy-developers"),

@@ -26,14 +26,19 @@ fn read_md_page(link: &str) -> String {
         .join(link)
         .with_extension("md");
 
-    #[cfg(feature = "nightly")]
-    {
-        let path_str = path.to_str().expect("path is not valid UTF-8");
-        proc_macro::tracked_path::path(path_str);
-    }
+    track_path(&path);
 
     std::fs::read_to_string(path).expect("failed to read file")
 }
+
+#[rustversion::nightly]
+fn track_path(path: &Path) {
+    let path_str = path.to_str().expect("path is not valid UTF-8");
+    proc_macro::tracked_path::path(path_str);
+}
+
+#[rustversion::not(nightly)]
+fn track_path(_path: &Path) {}
 
 pub(super) fn quote_md_page(md_page: &MdPage) -> TokenStream {
     let link = &md_page.link;
@@ -151,7 +156,7 @@ fn fix_section_children(sections: &Vec<Section>) -> Section {
                 .expect("just accessed stack[stack.len() - 1] so stack can't be empty");
             stack
                 .last_mut()
-                .expect("root section should always be in the stack")
+                .expect("the root section should always be in the stack")
                 .children
                 .push(last);
         }
@@ -164,12 +169,12 @@ fn fix_section_children(sections: &Vec<Section>) -> Section {
             .expect("just accessed stack[stack.len() - 1] so stack can't be empty");
         stack
             .last_mut()
-            .expect("root section should always be in the stack")
+            .expect("the root section should always be in the stack")
             .children
             .push(last);
     }
     stack
         .into_iter()
         .next()
-        .expect("root section should always be in the stack")
+        .expect("the root section should always be in the stack")
 }
