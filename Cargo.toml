@@ -19,11 +19,11 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(nightly)'] }
 askama = "0.14"
 atom_syndication = "0.12"
 chrono = "0.4"
-comrak = "0.38"
-cot = { git = "https://github.com/cot-rs/cot.git", rev = "e1fec09dddb96806686d8c0e264d1c145c53304e", default-features = false }
+comrak = "0.39"
+cot = { version = "0.3", default-features = false }
 grass = "0.13"
 indexmap = "2.7"
-lightningcss = "1.0.0-alpha.65"
+lightningcss = "1.0.0-alpha.66"
 m4txblog-common = { path = "m4txblog-common" }
 m4txblog-macros = { path = "m4txblog-macros" }
 proc-macro2 = "1"

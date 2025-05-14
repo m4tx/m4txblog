@@ -10,5 +10,6 @@ url = "sqlite://db.sqlite3?mode=rwc"
 type = "database"
 
 [static_files]
+url = "/"
 rewrite = "query_param"
 cache_timeout = "1year"
