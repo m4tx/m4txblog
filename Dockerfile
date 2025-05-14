@@ -12,5 +12,5 @@ RUN apt-get update &&  \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["/app/m4txblog", "-l", "0.0.0.0:8000", "-c", "/app/prod.toml"]
+CMD ["m4txblog", "-l", "0.0.0.0:8000", "-c", "/app/prod.toml"]
 EXPOSE 8000
