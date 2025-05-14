@@ -10,6 +10,7 @@ type = "database"
 live_reload.enabled = true
 
 [static_files]
+url = "/"
 rewrite = "query_param"
 cache_timeout = "1year"
 

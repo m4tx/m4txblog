@@ -175,15 +175,16 @@ impl App for CotSiteApp {
 
     fn static_files(&self) -> Vec<StaticFile> {
         let mut files = static_files!(
-            "css/main.css",
-            "js/color-modes.js",
-            "images/favicon-32.png",
-            "images/favicon-180.png",
-            "images/favicon-192.png",
-            "images/favicon-512.png",
-            "images/site.webmanifest",
+            "favicon.ico",
+            "static/css/main.css",
+            "static/js/color-modes.js",
+            "static/images/favicon-32.png",
+            "static/images/favicon-180.png",
+            "static/images/favicon-192.png",
+            "static/images/favicon-512.png",
+            "static/images/site.webmanifest",
         );
-        files.append(&mut static_files_dir!("images/blog/"));
+        files.append(&mut static_files_dir!("static/images/blog/"));
         files
     }
 }

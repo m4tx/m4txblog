@@ -15,7 +15,7 @@ target/
 *.sqlite3-journal
 
 # Compiled files
-static/css/main.css
+static/static/css/main.css
 static-files/
 syntax-highlighting/defs.bin
 

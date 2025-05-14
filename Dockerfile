@@ -13,4 +13,4 @@ RUN apt-get update &&  \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["/app/entrypoint.sh", "-l", "0.0.0.0:8000"]
+CMD ["/app/entrypoint.sh", "-l", "0.0.0.0:8000", "-c", "/app/prod.toml"]
