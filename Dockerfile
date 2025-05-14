@@ -6,7 +6,6 @@ RUN cargo install --path . --locked
 FROM docker.io/library/debian:12-slim
 COPY --from=builder /usr/local/cargo/bin/m4txblog /usr/local/bin/m4txblog
 RUN mkdir /app
-COPY entrypoint.sh /app
 
 RUN apt-get update &&  \
     apt-get install -y --no-install-recommends tini=0.19.* && \
