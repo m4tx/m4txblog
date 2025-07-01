@@ -1,4 +1,4 @@
-FROM docker.io/library/rust:1.87 AS builder
+FROM docker.io/library/rust:1.88 AS builder
 WORKDIR /usr/src/m4txblog
 COPY . .
 RUN cargo install --path . --locked
