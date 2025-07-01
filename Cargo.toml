@@ -22,7 +22,7 @@ chrono = "0.4"
 comrak = "0.39"
 cot = { version = "0.3", default-features = false }
 grass = "0.13"
-indexmap = "2.7"
+indexmap = "2.10"
 lightningcss = "1.0.0-alpha.67"
 m4txblog-common = { path = "m4txblog-common" }
 m4txblog-macros = { path = "m4txblog-macros" }
