@@ -115,6 +115,8 @@ This can be summarized in the following table:
 
 For now, cloning the request parts seems to be the best solution for Cot. It is simple to implement, and it allows us to use the existing `tower_http` middleware ecosystem. Perhaps in the future we will think about replacing `tower_http` with something built in-house, but for now it should be good enough.
 
+Also, don't get me wrong: `tower` is an excellent piece of software and it's already ingeniously generic. It already fits well a lot of use cases. Perhaps the performance overhead I've mentioned is negligible. However, maybe I could spark a discussion about extending the usefulness of this project even further.
+
 As a closing thought, I'm happy to be wrong about everything I've said in this post. If you have a better idea, or if you think that the current solution is good enough, please let me know! I'm always open to discussion and would love to hear your thoughts on this topic.
 
 [`tower`]: https://docs.rs/tower/latest/tower/index.html
