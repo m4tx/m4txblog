@@ -1,7 +1,8 @@
 ---
 title: "The journey towards the best error handling in Rust web frameworks"
 permalink: "towards-rust-web-best-errors"
-date: 2025-07-08 7:30:00+0000
+date: 2025-07-08 18:41:57+0000
+reddit_link: https://www.reddit.com/r/rust/comments/1luv64q/the_journey_towards_the_best_error_handling_in/
 ---
 
 I am working on a Rust web framework called [Cot](https://cot.rs/). This is a framework heavily inspired by Django and influenced by many Rust web frameworks, such as Actix, Axum, Poem, Rocket, and others. The main goal is to provide a state of the art developer experience, and part of that is to provide the best error handling possible with minimal developer effort.

@@ -2,6 +2,8 @@
 title: "Welcome, Cot: the Rust web framework for lazy developers"
 permalink: "cot-the-rust-web-framework-for-lazy-developers"
 date: 2025-02-18 12:30:00+0000
+reddit_link: https://www.reddit.com/r/rust/comments/1isd428/welcome_cot_the_rust_web_framework_for_lazy/
+hackernews_link: https://news.ycombinator.com/item?id=43089468
 ---
 
 [Cot] was born out of frustration - the kind that every Rust developer feels when searching for a batteries-included, Django-like web framework that just handles the basics for you. While Rust is a really mature language, the web ecosystem is still sort of lacking. Let's change that.

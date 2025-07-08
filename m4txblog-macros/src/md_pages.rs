@@ -55,6 +55,14 @@ pub(super) fn quote_md_page(md_page: &MdPage) -> TokenStream {
         .iter()
         .map(|keyword| quote! { String::from(#keyword) });
     let sections = md_page.sections.iter().map(quote_section);
+    let reddit_link = match &md_page.reddit_link {
+        Some(link) => quote! { Some(String::from(#link)) },
+        None => quote! { None },
+    };
+    let hackernews_link = match &md_page.hackernews_link {
+        Some(link) => quote! { Some(String::from(#link)) },
+        None => quote! { None },
+    };
 
     quote! {
         m4txblog_common::md_pages::MdPage {
@@ -66,6 +74,8 @@ pub(super) fn quote_md_page(md_page: &MdPage) -> TokenStream {
             category: #category,
             tags: vec![#(#tags),*],
             sections: vec![#(#sections),*],
+            reddit_link: #reddit_link,
+            hackernews_link: #hackernews_link,
         }
     }
 }
@@ -137,6 +147,8 @@ pub(super) fn parse_md_page(link: &str) -> MdPage {
         category: front_matter.category,
         tags: front_matter.tags.unwrap_or_default(),
         sections: root_section.children,
+        reddit_link: front_matter.reddit_link,
+        hackernews_link: front_matter.hackernews_link,
     }
 }
 

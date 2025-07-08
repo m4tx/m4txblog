@@ -15,6 +15,8 @@ pub struct MdPage {
     pub sections: Vec<Section>,
     pub category: Option<String>,
     pub tags: Vec<String>,
+    pub reddit_link: Option<String>,
+    pub hackernews_link: Option<String>,
 }
 
 impl MdPage {
@@ -27,6 +29,10 @@ impl MdPage {
     pub fn years_ago(&self) -> i64 {
         let time_delta = chrono::Utc::now().fixed_offset() - self.date;
         time_delta.num_days() / 365
+    }
+
+    pub fn accepts_comments(&self) -> bool {
+        self.reddit_link.is_some() || self.hackernews_link.is_some()
     }
 }
 
@@ -53,6 +59,8 @@ pub struct FrontMatter {
     pub language: Option<String>,
     pub category: Option<String>,
     pub tags: Option<Vec<String>>,
+    pub reddit_link: Option<String>,
+    pub hackernews_link: Option<String>,
 }
 
 #[derive(Debug, Clone)]

@@ -2,6 +2,7 @@
 title: "Introducing Cot v0.2"
 permalink: "introducing-cot-v02"
 date: 2025-03-26 7:30:00+0000
+reddit_link: https://www.reddit.com/r/rust/comments/1jklvex/introducing_cot_v02_a_new_version_of_the_rust_web/
 ---
 
 I'm happy to announce that [Cot](https://cot.rs/) v0.2 has been released today! The first bigger release after the public announcement brings a fair number of new features, improvements, and bug fixes. Most importantly, we've gathered a lot of feedback from people during the announcement, which we are continuously integrating into the project. Let's dive into the details!

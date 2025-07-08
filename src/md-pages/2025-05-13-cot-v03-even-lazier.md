@@ -2,6 +2,7 @@
 title: "Cot v0.3: Even Lazier"
 permalink: "cot-v03-even-lazier"
 date: 2025-05-13 12:30:00+0000
+reddit_link: https://www.reddit.com/r/rust/comments/1klvjzf/cot_v03_even_lazier/
 ---
 
 13 May 2025 marks the release of Cot v0.3, a significant update to the Rust web framework for lazy developers. This release introduces several new features, improvements, and bug fixes, making it even easier to build web applications with Cot.
