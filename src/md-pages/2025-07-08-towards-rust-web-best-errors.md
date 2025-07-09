@@ -51,14 +51,14 @@ If we want to go even further, we could even drop `tower` and implement our own 
 
 ### Clone the request
 
-Another quite obvious solution is to clone the request (sans the body) just in case error happens, and we need to access it later. This is a very simple solution, but it has a few drawbacks:
+Another quite obvious solution is to clone the request (sans the body) just in case error happens, and we need to access it later. This has a few drawbacks:
 
 * Cloning the request is not free, and it will result in performance overhead. For applications handling thousands of requests per second, this overhead can become significant, especially when most requests complete successfully and never need the cloned data.
 * It may lead to weird bugs, inconsistencies, and confusion. For example, if the request is modified in the middleware, the cloned request will not reflect those changes. This may lead to unexpected behavior in the error handler, as it will not have access to the modified request. Some middleware may also not expect this—we can imagine some sort of a "make-idempotent" middleware that drops request if a message with given ID was already processed. This can be worked around by only registering such middleware for the regular request handlers, but it still adds complexity to the framework.
 
 ### Change `tower_http`
 
-An interesting solution would be to change `tower_http` to allow passing a mutable reference to the request rather than an owned object. We could go even further: change the middleware implementation to allow generic request and response types, as long as they implement some trait that allows us to access the request and response data in a unified way. This would allow us to use `tower_http` with framework that didn't use `tower` at all, as long as we provide trait implementations for appropriate types.
+An interesting solution would be to change `tower_http` to allow passing a mutable reference to the request rather than an owned object. We could go even further: change the middleware implementation to allow generic request and response types, as long as they implement some trait that allows us to access the request and response data in a unified way. This would allow us to use `tower_http` with frameworks that didn't use `tower` at all, as long as we provide trait implementations for appropriate types.
 
 While this approach would benefit the entire Rust ecosystem by making `tower_http` more flexible, it faces significant adoption challenges. It would require a lot of work and coordination with the `tower_http` maintainers, which don't necessarily have to agree with this solution.
 
@@ -115,9 +115,9 @@ This can be summarized in the following table:
 
 For now, cloning the request parts seems to be the best solution for Cot. It is simple to implement, and it allows us to use the existing `tower_http` middleware ecosystem. Perhaps in the future we will think about replacing `tower_http` with something built in-house, but for now it should be good enough.
 
-Also, don't get me wrong: `tower` is an excellent piece of software and it's already ingeniously generic. It already fits well a lot of use cases. Perhaps the performance overhead I've mentioned is negligible. However, maybe I could spark a discussion about extending the usefulness of this project even further.
+Also, don't get me wrong: `tower` (along with `tower_http`) is an excellent piece of software and it's already ingeniously generic. It already fits well a lot of use cases. Perhaps the performance overhead I've mentioned is negligible. However, maybe I could spark a discussion about extending the usefulness of this project even further.
 
-As a closing thought, I'm happy to be wrong about everything I've said in this post. If you have a better idea, or if you think that the current solution is good enough, please let me know! I'm always open to discussion and would love to hear your thoughts on this topic.
+As a closing thought, I'm happy to be wrong about everything I've said in this post. If you have a better idea, please let me know! I'm always open to discussion and would love to hear your thoughts on this topic.
 
 [`tower`]: https://docs.rs/tower/latest/tower/index.html
 [`tower_http`]: https://docs.rs/tower-http/latest/tower_http/
