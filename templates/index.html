@@ -1,19 +1,19 @@
 {% extends "_base.html" %}
-
-{% block title %}Home{% endblock %}
-
+{% block title %}
+    Home
+{% endblock title %}
 {% block head -%}
-    <meta name="description" content="Mateusz Maćkowski's (aka m4tx) (dev)blog.">
-    <meta name="keywords" content="devblog, home, personal, programming, rust, cot">
-{%- endblock %}
-
+    <meta name="description"
+          content="Mateusz Maćkowski's (aka m4tx) (dev)blog.">
+    <meta name="keywords"
+          content="devblog, home, personal, programming, rust, cot">
+{%- endblock head %}
 {% block content %}
-
-<div class="container px-4 py-5">
-    {%- include "_post_list.html" -%}
-
-    <div class="text-center mt-5">
-        <a href="{{ cot::reverse!(urls, "archive")? }}" class="btn btn-sm btn-outline-primary">See the post archive</a>
+    <div class="container px-4 py-5">
+        {%- include "_post_list.html" -%}
+        <div class="text-center mt-5">
+            <a href="{{ cot::reverse!(urls, "archive")? }}"
+               class="btn btn-sm btn-outline-primary">See the post archive</a>
+        </div>
     </div>
-</div>
-{% endblock %}
+{% endblock content %}

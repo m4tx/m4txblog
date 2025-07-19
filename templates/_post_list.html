@@ -1,7 +1,9 @@
 {%- for post_list in posts.values() -%}
     {%- let post = &post_list[0] -%}
     <article class="blog-post">
-        <h2><a href="{{ cot::reverse!(urls, "post", page = post.link)? }}">{{ post.title }}</a></h2>
+        <h2>
+            <a href="{{ cot::reverse!(urls, "post", page = post.link)? }}">{{ post.title }}</a>
+        </h2>
         <p class="blog-post-meta">{{ post.date.format("%d %B %Y") }}</p>
     </article>
 {%- endfor %}

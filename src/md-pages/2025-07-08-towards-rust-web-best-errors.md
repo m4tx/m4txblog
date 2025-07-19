@@ -74,42 +74,13 @@ Let's quickly see at a few different Rust web frameworks and how they approach t
 
 This can be summarized in the following table:
 
-<table class="table">
-    <thead>
-        <tr>
-        <th>Framework</th>
-        <th>Tower compatibility</th>
-        <th>Access to request in error handler</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Axum</td>
-            <td>✅</td>
-            <td>⚠️ With a performance overhead</td>
-        </tr>
-        <tr>
-            <td>Actix Web</td>
-            <td>✅</td>
-            <td>⚠️ Not built-in and with a performance overhead️</td>
-        </tr>
-        <tr>
-            <td>Poem</td>
-            <td>✅</td>
-            <td>⚠️ Not built-in and with a performance overhead️</td>
-        </tr>
-        <tr>
-            <td>Rocket</td>
-            <td>❌</td>
-            <td>✅</td>
-        </tr>
-        <tr>
-            <td>Pavex</td>
-            <td>❌</td>
-            <td>✅</td>
-        </tr>
-    </tbody>
-</table>
+| Framework | Tower compatibility | Access to request in error handler               |
+|-----------|---------------------|--------------------------------------------------|
+| Axum      | ✅                   | ⚠️ With a performance overhead                   |
+| Actix Web | ✅                   | ⚠️ Not built-in and with a performance overhead️ |
+| Poem      | ✅                   | ⚠️ Not built-in and with a performance overhead️ |
+| Rocket    | ❌                   | ✅                                                |
+| Pavex     | ❌                   | ✅                                                |
 
 ## Final thoughts
 
