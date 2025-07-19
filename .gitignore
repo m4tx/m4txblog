@@ -23,3 +23,7 @@ syntax-highlighting/defs.bin
 *.db
 *.sqlite3
 *.sqlite3-journal
+
+# Configuration files
+config/prod.toml
+config/custom.toml

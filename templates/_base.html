@@ -50,7 +50,12 @@
             <div class="container py-3 mx-auto">
                 <div class="text-start text-lg-center">
                     <p class="text-body-secondary my-0">
-                        © 2010-2025 Mateusz Maćkowski. All texts on the <a href="https://creativecommons.org/licenses/by-nd/4.0/" rel="license">CC-BY-ND</a> license. <a href="{{ cot::reverse!(urls, "feed")? }}">Atom feed</a>
+                        <span title="Creative Commons">
+                            <svg class="bi">
+                                <use href="#cc"></use>
+                            </svg>
+                        </span>
+                        2010-2025 Mateusz Maćkowski. All texts on the <a href="https://creativecommons.org/licenses/by-nd/4.0/" rel="license">CC-BY-ND</a> license. <a href="{{ cot::reverse!(urls, "feed")? }}">Atom feed</a>
                     </p>
                 </div>
             </div>

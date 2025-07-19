@@ -3,14 +3,14 @@
     Error
 {% endblock title %}
 {% block content -%}
-    <div class="col-lg-6 mx-auto d-flex justify-content-center flex-column py-5 px-2 text-center h-100">
+    <div class="col-lg-6 mx-auto d-flex justify-content-center flex-column py-5 px-2 text-center h-100 error-page">
         <h1>{{ error.status_code() }}</h1>
         <p class="lead">
             {%- if error.status_code() != cot::StatusCode::NOT_FOUND -%}
                 This shouldn't happen. <a href="https://github.com/m4tx/m4txblog/issues/new">Let me know on GitHub</a> if the problem persists!
             {%- endif -%}
-            <hr>
-            cot.rs/0.4.0 (Arch BTW)
         </p>
+        <hr />
+        cot.rs/0.4.0 (Arch BTW)
     </div>
 {%- endblock content %}
