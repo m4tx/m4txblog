@@ -9,16 +9,19 @@ use async_trait::async_trait;
 use cot::cli::clap::{ArgMatches, Command};
 use cot::cli::{Cli, CliMetadata, CliTask};
 use cot::db::migrations::SyncDynMigration;
+use cot::error::handler::{DynErrorPageHandler, RequestError};
+use cot::error::not_found::NotFound;
 use cot::html::Html;
-use cot::http::request::Parts;
 use cot::project::{
-    App, MiddlewareContext, Project, RegisterAppsContext, RootHandlerBuilder, WithConfig,
+    App, MiddlewareContext, Project, RegisterAppsContext, RootHandler, RootHandlerBuilder,
+    WithConfig,
 };
-use cot::request::RequestExt;
-use cot::request::extractors::{FromRequestParts, Path, StaticFiles};
+use cot::request::extractors::{FromRequestHead, Path, StaticFiles};
+use cot::request::{RequestExt, RequestHead};
+use cot::response::IntoResponse;
 use cot::router::{Route, Router, Urls};
 use cot::static_files::{StaticFile, StaticFilesMiddleware};
-use cot::{AppBuilder, Bootstrapper, BoxedHandler, static_files};
+use cot::{AppBuilder, Bootstrapper, static_files};
 use indexmap::IndexMap;
 use m4txblog_common::md_pages::MdPage;
 use m4txblog_macros::{md_page, static_files_dir};
@@ -27,24 +30,26 @@ use tracing_subscriber::util::SubscriberInitExt;
 use crate::feed::blog_feed;
 use crate::posts::{get_archived_post_map, get_post_map, get_unarchived_post_map};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, FromRequestHead)]
 struct BaseContext {
     urls: Urls,
     static_files: StaticFiles,
-    route_name: String,
+    route_name: RouteName,
 }
 
-impl FromRequestParts for BaseContext {
-    async fn from_request_parts(parts: &mut Parts) -> cot::Result<Self> {
-        let urls = Urls::from_request_parts(parts).await?;
-        let static_files = StaticFiles::from_request_parts(parts).await?;
-        let route_name = parts.route_name().unwrap_or_default().to_owned();
+#[derive(Debug, Clone)]
+struct RouteName(String);
 
-        Ok(Self {
-            urls,
-            static_files,
-            route_name,
-        })
+impl FromRequestHead for RouteName {
+    async fn from_request_head(head: &RequestHead) -> cot::Result<Self> {
+        let route_name = head.route_name().unwrap_or_default().to_owned();
+        Ok(Self(route_name))
+    }
+}
+
+impl PartialEq<str> for RouteName {
+    fn eq(&self, other: &str) -> bool {
+        self.0 == other
     }
 }
 
@@ -105,18 +110,18 @@ async fn post_with_lang(
 
 fn page_response(base_context: &BaseContext, page: &str, lang: Option<&str>) -> cot::Result<Html> {
     let post_map = get_post_map();
-    let post_list = post_map.get(page).ok_or_else(cot::Error::not_found)?;
+    let post_list = post_map.get(page).ok_or_else(NotFound::new)?;
 
     if Some(post_list[0].language.as_str()) == lang {
         // the default language should be returned only by the `post` route
-        return Err(cot::Error::not_found());
+        return Err(NotFound::new().into());
     }
 
     let post = if let Some(lang) = lang {
         post_list
             .iter()
             .find(|post| post.language == lang)
-            .ok_or_else(cot::Error::not_found)?
+            .ok_or_else(NotFound::new)?
     } else {
         &post_list[0]
     };
@@ -204,15 +209,15 @@ impl Project for CotSiteProject {
         modules.register_with_views(CotSiteApp, "");
     }
 
-    fn middlewares(
-        &self,
-        handler: RootHandlerBuilder,
-        context: &MiddlewareContext,
-    ) -> BoxedHandler {
+    fn middlewares(&self, handler: RootHandlerBuilder, context: &MiddlewareContext) -> RootHandler {
         let handler = handler.middleware(StaticFilesMiddleware::from_context(context));
         #[cfg(debug_assertions)]
         let handler = handler.middleware(cot::middleware::LiveReloadMiddleware::new());
         handler.build()
+    }
+
+    fn server_error_handler(&self) -> DynErrorPageHandler {
+        DynErrorPageHandler::new(handle_error)
     }
 }
 
@@ -234,6 +239,27 @@ impl CliTask for CreateAdmin {
     ) -> cot::Result<()> {
         todo!();
     }
+}
+
+async fn handle_error(
+    base_context: BaseContext,
+    error: RequestError,
+) -> cot::Result<impl IntoResponse> {
+    #[derive(Debug, Template)]
+    #[template(path = "error.html")]
+    struct ErrorTemplate<'a> {
+        base_context: &'a BaseContext,
+        error: RequestError,
+    }
+
+    let status_code = error.status_code();
+    let error_template = ErrorTemplate {
+        base_context: &base_context,
+        error,
+    };
+    let rendered = error_template.render()?;
+
+    Ok(Html::new(rendered).with_status(status_code))
 }
 
 #[cot::main]

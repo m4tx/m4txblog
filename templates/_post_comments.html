@@ -1,26 +1,46 @@
-<section>
-    <hr>
-    <h2>Comments</h2>
-
-    Discuss this post on:
-    <ul>
-        <li><a href="#">{% include "icons/reddit.svg" %} Reddit</a></li>
-        <li><a href="#">{% include "icons/hackernews.svg" %} Hacker News</a></li>
-        <li>this website:</li>
-    </ul>
-
-    <form action="" method="post">
-        <div class="input-group mb-3">
-            <span class="input-group-text" id="basic-addon1">@</span>
-            <input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
-        </div>
-
-        <textarea class="form-control" aria-label="With textarea" placeholder="Comment"></textarea>
-
-        <p>You may use <a href="https://commonmark.org/help/">Markdown</a> in your comment.</p>
-
-        <p>This site uses Akismet to reduce spam. <a href="https://akismet.com/privacy/">Learn how your comment data is processed.</a></p>
-
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-</section>
+{%- if post.accepts_comments() -%}
+    <section>
+        <hr>
+        <h2>Comments</h2>
+        Discuss this post on:
+        <ul>
+            {%- if let Some(reddit_link) = post.reddit_link -%}
+                <li>
+                    <a href="{{ reddit_link }}">
+                        {% include "icons/reddit.svg" %}
+                        Reddit
+                    </a>
+                </li>
+            {%- endif -%}
+            {%- if let Some(hackernews_link) = post.hackernews_link -%}
+                <li>
+                    <a href="{{ hackernews_link }}">
+                        {% include "icons/hackernews.svg" %}
+                        Hacker News
+                    </a>
+                </li>
+            {%- endif -%}
+            {% if false %}<li>this website:</li>{% endif %}
+        </ul>
+        {%- if false -%}
+            <form action="" method="post">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1">@</span>
+                    <input type="text"
+                           class="form-control"
+                           placeholder="Username"
+                           aria-label="Username"
+                           aria-describedby="basic-addon1">
+                </div>
+                <textarea class="form-control" aria-label="With textarea" placeholder="Comment"></textarea>
+                <p>
+                    You may use <a href="https://commonmark.org/help/">Markdown</a> in your comment.
+                </p>
+                <p>
+                    This site uses Akismet to reduce spam. <a href="https://akismet.com/privacy/">Learn how your comment data is processed.</a>
+                </p>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        {%- endif -%}
+    </section>
+{%- endif -%}

@@ -1,3 +1,5 @@
+mod rendering;
+
 use std::path::Path;
 use std::sync::Mutex;
 
@@ -6,6 +8,8 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::LitStr;
+
+use crate::md_pages::rendering::markdown_to_html;
 
 pub(super) struct MdPageInput {
     pub(super) link: String,
@@ -133,8 +137,7 @@ pub(super) fn parse_md_page(link: &str) -> MdPage {
         .build();
     let plugins = comrak::Plugins::builder().render(render_plugins).build();
 
-    let md_page_content =
-        comrak::markdown_to_html_with_plugins(&md_page_content, &options, &plugins);
+    let md_page_content = markdown_to_html(&md_page_content, &options, &plugins);
     let sections = heading_adapter.sections.lock().unwrap().clone();
     let root_section = fix_section_children(&sections);
 
