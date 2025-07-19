@@ -212,3 +212,13 @@ figure {
     text-align: center;
   }
 }
+
+:root, [data-bs-theme=light] {
+  .error-page {
+    color: #fff;
+
+    h1, h2, h3, h4, h5, h6 {
+      color: #fff;
+    }
+  }
+}

@@ -210,10 +210,10 @@ impl Project for CotSiteProject {
     }
 
     fn middlewares(&self, handler: RootHandlerBuilder, context: &MiddlewareContext) -> RootHandler {
-        let handler = handler.middleware(StaticFilesMiddleware::from_context(context));
-        #[cfg(debug_assertions)]
-        let handler = handler.middleware(cot::middleware::LiveReloadMiddleware::new());
-        handler.build()
+        handler
+            .middleware(StaticFilesMiddleware::from_context(context))
+            .middleware(cot::middleware::LiveReloadMiddleware::from_context(context))
+            .build()
     }
 
     fn server_error_handler(&self) -> DynErrorPageHandler {
