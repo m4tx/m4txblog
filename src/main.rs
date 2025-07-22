@@ -3,6 +3,7 @@ pub mod consts;
 mod feed;
 mod migrations;
 mod posts;
+pub(crate) mod template_util;
 
 use askama::Template;
 use async_trait::async_trait;
