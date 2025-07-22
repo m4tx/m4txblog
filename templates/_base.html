@@ -8,9 +8,12 @@
         <meta name="author" content="Mateusz Maćkowski">
         <meta name="generator" content="{{ crate::consts::GENERATOR }}">
         <title>
-            {%- block title %}
-            {% endblock title %}
-        | Mateusz Maćkowski</title>
+            {%- block full_title %}
+                {%- block title %}
+                {%- endblock title %}
+                | Mateusz Maćkowski
+            {%- endblock full_title %}
+        </title>
         <script src="{{ base_context.static_files.url_for("static/js/color-modes.js")? }}"></script>
         <link href="{{ base_context.static_files.url_for("static/css/main.css")? }}"
               rel="stylesheet">
