@@ -3,7 +3,7 @@ WORKDIR /usr/src/m4txblog
 COPY . .
 RUN cargo install --path . --locked
 
-FROM docker.io/library/debian:12-slim
+FROM docker.io/library/debian:13-slim
 COPY --from=builder /usr/local/cargo/bin/m4txblog /usr/local/bin/m4txblog
 RUN mkdir /app
 
