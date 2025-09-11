@@ -200,7 +200,7 @@ Another project, arguably more interesting, is already being ported, so remember
 
 ## What's next
 
-One key takeaway from the release is that making it after a 3-month-long break is difficult. It's much easier to remember the key details of the changes when you are actively working on them. The plan to avoid this is to make smaller, more frequent releases in the future—ideally, every month. This will also help with getting feedback from users faster and iterating on features more quickly.
+One key takeaway from the release is that making it after a 4-month-long break is difficult. It's much easier to remember the key details of the changes when you are actively working on them. The plan to avoid this is to make smaller, more frequent releases in the future—ideally, every month. This will also help with getting feedback from users faster and iterating on features more quickly.
 
 Check out the latest guide at [the Cot website](https://cot.rs/guide/v0.4/) to start building webapps with Cot! If you feel like helping Cot grow, you are encouraged to contribute to the project by [reporting bugs, suggesting features, or writing code](https://github.com/cot-rs/cot). Any help is very much appreciated!
 
