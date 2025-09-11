@@ -2,6 +2,7 @@
 title: "Cot v0.4: Particularly Lazy"
 permalink: "cot-v04-particularly-lazy"
 date: 2025-09-11 23:22:21+0000
+reddit_link: https://www.reddit.com/r/rust/comments/1nelj7m/cot_v04_particularly_lazy/
 ---
 
 Well, it's been a while since the last release, but it's finally here! Today, 11 September 2025, marks the release of Cot v0.4, **the most significant update to the Rust web framework for lazy developers**. Which, to be honest, is not surprising, given that the last release was in May. But hey, better late, than never, right?
