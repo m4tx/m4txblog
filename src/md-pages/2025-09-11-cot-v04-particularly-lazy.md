@@ -4,7 +4,7 @@ permalink: "cot-v04-particularly-lazy"
 date: 2025-09-11 18:59:14+0000
 ---
 
-Well, it's been a while since the last release, but it's finally here! 11 September 2025 marks the release of Cot v0.4, **the most significant update to the Rust web framework for lazy developers**. Which, to be honest, is not surprising, given that the last release was in May. But hey, better late, than never, right?
+Well, it's been a while since the last release, but it's finally here! Today, 11 September 2025, marks the release of Cot v0.4, **the most significant update to the Rust web framework for lazy developers**. Which, to be honest, is not surprising, given that the last release was in May. But hey, better late, than never, right?
 
 Let's get straight to the point!
 
@@ -82,7 +82,7 @@ async fn error_page_handler(
 }
 ```
 
-As you can see, not only is the new API much simpler, but it also gives you access to the actual error that occurred, as well as anything that you would typically retrieve via extractors, such as request headers, cookies, router URLs, static files, and more. Neat! And allows to create much nicer error pages on the cot.rs website, too:
+As you can see, not only is the new API much simpler, but it also gives you access to the actual error that occurred, as well as anything that you would typically retrieve via extractors, such as request headers, cookies, router URLs, static files, and more. Neat! It allows to create much nicer error pages on the cot.rs website, too:
 
 [![cot.rs displaying the "Not Found" page](/static/images/blog/2025-09-11-cot-v04-particularly-lazy-error-page.png)](/static/images/blog/2025-09-11-cot-v04-particularly-lazy-error-page.png)
 
@@ -129,6 +129,8 @@ struct EventForm {
 ```
 
 [![Datetime form examples](/static/images/blog/2025-09-11-cot-v04-particularly-lazy-forms.png)](/static/images/blog/2025-09-11-cot-v04-particularly-lazy-forms.png)
+
+As illustrated in the screenshot, the new form handling lets you configure a wide range of HTML attributes programmatically—here we're disabling all Wednesdays as an example.
 
 ### FromRequestParts derive macro
 
