@@ -10,8 +10,8 @@ use async_trait::async_trait;
 use cot::cli::clap::{ArgMatches, Command};
 use cot::cli::{Cli, CliMetadata, CliTask};
 use cot::db::migrations::SyncDynMigration;
+use cot::error::NotFound;
 use cot::error::handler::{DynErrorPageHandler, RequestError};
-use cot::error::not_found::NotFound;
 use cot::html::Html;
 use cot::project::{
     App, MiddlewareContext, Project, RegisterAppsContext, RootHandler, RootHandlerBuilder,
@@ -217,7 +217,7 @@ impl Project for CotSiteProject {
             .build()
     }
 
-    fn server_error_handler(&self) -> DynErrorPageHandler {
+    fn error_handler(&self) -> DynErrorPageHandler {
         DynErrorPageHandler::new(handle_error)
     }
 }
