@@ -1,10 +1,10 @@
 ---
 title: "Cot v0.4: Particularly Lazy"
 permalink: "cot-v04-particularly-lazy"
-date: 2025-07-28 18:59:14+0000
+date: 2025-09-11 18:59:14+0000
 ---
 
-Well, it's been a while since the last release, but it's finally here! 28 August 2025 marks the release of Cot v0.4, **the most significant update to the Rust web framework for lazy developers**. Which, to be honest, is not surprising, given that the last release was in May. But hey, better late, than never, right?
+Well, it's been a while since the last release, but it's finally here! 11 September 2025 marks the release of Cot v0.4, **the most significant update to the Rust web framework for lazy developers**. Which, to be honest, is not surprising, given that the last release was in May. But hey, better late, than never, right?
 
 Let's get straight to the point!
 
@@ -74,15 +74,30 @@ async fn error_page_handler(
     request_head: &RequestHead,
     error: RequestError
 ) -> cot::Result<impl IntoResponse> {
-    Json(ServiceErrorResponse {
+    let response = ServiceErrorResponse {
         uri: request_head.uri().to_string(),
         message: error.to_string(),
-    })
-    .with_status(error.status_code())
+    };
+    Json(response).with_status(error.status_code())
 }
 ```
 
-As you can see, not only is the new API much simpler, but it also gives you access to the actual error that occurred, as well as anything that you would typically retrieve via extractors, such as request headers, cookies, router URLs, static files, and more. Neat!
+As you can see, not only is the new API much simpler, but it also gives you access to the actual error that occurred, as well as anything that you would typically retrieve via extractors, such as request headers, cookies, router URLs, static files, and more. Neat! And allows to create much nicer error pages on the cot.rs website, too:
+
+[![cot.rs displaying the "Not Found" page](/static/images/blog/2025-09-11-cot-v04-particularly-lazy-error-page.png)](/static/images/blog/2025-09-11-cot-v04-particularly-lazy-error-page.png)
+
+### Support for multiple session stores and database session backend
+
+The latest version of the framework introduces support for dynamically **changing the session store based on the configuration**. This means you can now switch between different session storage backends without changing your application code—for instance, use the in-memory for development and Redis for production:
+
+```toml
+# config/prod.toml
+[middlewares.session.store]
+type = "cache"
+uri = "redis://localhost:6379"
+```
+
+The main reason for this change is introducing a **database-backed session store**. While the in-memory store is fine for development and testing, it's not suitable for production use, as it doesn't persist sessions across server restarts. The database-backed store solves these problems by storing session data in the database, making it persistent and scalable. That's why it's the default choice now both for the default development and production configurations, as it's essentially good enough until you need the best performance possible.
 
 ### Form enhancements
 
@@ -100,31 +115,20 @@ struct FileForm {
 
 The rest looks just like [the typical HTML form handling in Cot](https://cot.rs/guide/v0.4/forms/#form-trait)!
 
-In addition to file uploads, a notable improvement is the **support for [`chrono` library](https://docs.rs/chrono/latest/chrono/) types**:
+In addition to file uploads, a notable improvement is the **support for the [`chrono` library](https://docs.rs/chrono/latest/chrono/) types**:
 
 ```rust
 #[derive(Form)]
 struct EventForm {
     title: String,
-    event_date: Date, // Date picker
-    event_time: Time, // Time picker
-    datetime: DateTime<FixedOffset>, // DateTime picker
-    recurring_days: WeekdaySet, // Multi-select weekdays
+    event_date: chrono::NaiveDate, // Date picker
+    event_time: chrono::Time, // Time picker
+    datetime: chrono::DateTime<chrono::FixedOffset>, // DateTime picker
+    recurring_days: chrono::WeekdaySet, // Multi-select weekdays
 }
 ```
 
-### Support for multiple session stores
-
-The latest version of the framework introduces support for dynamically **changing the session store based on the configuration**. This means you can now switch between different session storage backends without changing your application code—for instance, use the in-memory for development and Redis for production:
-
-```toml
-# config/prod.toml
-[middlewares.session.store]
-type = "cache"
-uri = "redis://localhost:6379"
-```
-
-Hopefully Cot v0.5 will make this much more useful by adding a database-backed session store, a good enough choice both for dev in prod, at least until you need to process more traffic. [The pull request is already there](https://github.com/cot-rs/cot/pull/360), needing last tweaks and tests before merging!
+[![Datetime form examples](/static/images/blog/2025-09-11-cot-v04-particularly-lazy-forms.png)](/static/images/blog/2025-09-11-cot-v04-particularly-lazy-forms.png)
 
 ### FromRequestParts derive macro
 
@@ -163,18 +167,12 @@ struct BaseContext {
 }
 
 async fn index(base_context: BaseContext) -> cot::Result<Html> {
-    let index_template = IndexTemplate {
-        base_context: &base_context,
-    };
-
+    let index_template = IndexTemplate { base_context };
     Ok(Html::new(index_template.render()?))
 }
 
 async fn about(base_context: BaseContext) -> cot::Result<Html> {
-    let about_template = AboutTemplate {
-        base_context: &base_context,
-    };
-
+    let about_template = AboutTemplate { base_context };
     Ok(Html::new(about_template.render()?))
 }
 ```
