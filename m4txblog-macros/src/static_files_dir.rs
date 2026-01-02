@@ -60,7 +60,7 @@ fn get_files(base: &str, inner: &str) -> Vec<String> {
 #[rustversion::nightly]
 fn track_path(path: &Path) {
     let path_str = path.to_str().expect("path is not valid UTF-8");
-    proc_macro::tracked_path::path(path_str);
+    proc_macro::tracked::path(path_str);
 }
 
 #[rustversion::not(nightly)]
