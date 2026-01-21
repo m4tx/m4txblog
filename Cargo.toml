@@ -19,7 +19,7 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(nightly)'] }
 atom_syndication = "0.12"
 chrono = "0.4"
 comrak = "0.49"
-cot = { version = "0.4", default-features = false }
+cot = { version = "0.5", default-features = false }
 grass = "0.13"
 indexmap = "2.12"
 lightningcss = "1.0.0-alpha.68"
@@ -33,9 +33,6 @@ serde_yml = "0.0.12"
 syn = "2"
 syntect = { version = "5", default-features = false }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-
-[patch.crates-io]
-cot = { git = "https://github.com/cot-rs/cot.git", rev = "9d5976aeab35e23209c6aebcc744ae896ba0a987" }
 
 [features]
 nightly = ["m4txblog-macros/nightly"]
