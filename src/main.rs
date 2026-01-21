@@ -5,7 +5,6 @@ mod migrations;
 mod posts;
 pub(crate) mod template_util;
 
-use askama::Template;
 use async_trait::async_trait;
 use cot::cli::clap::{ArgMatches, Command};
 use cot::cli::{Cli, CliMetadata, CliTask};
@@ -22,7 +21,7 @@ use cot::request::{RequestExt, RequestHead};
 use cot::response::IntoResponse;
 use cot::router::{Route, Router, Urls};
 use cot::static_files::{StaticFile, StaticFilesMiddleware};
-use cot::{AppBuilder, Bootstrapper, static_files};
+use cot::{AppBuilder, Bootstrapper, Template, static_files};
 use indexmap::IndexMap;
 use m4txblog_common::md_pages::MdPage;
 use m4txblog_macros::{md_page, static_files_dir};
