@@ -2,6 +2,7 @@
 title: "Cot v0.5: New Features for Lazy Web Developers"
 permalink: "cot-v05-new-features-for-lazy-web-developers"
 date: 2026-01-21 18:52:21+0000
+reddit_link: https://www.reddit.com/r/rust/comments/1qja80v/cot_v05_released_new_features_for_lazy_web/
 ---
 
 21 January 2026 is the day of the release of Cot v0.5, the Rust web framework for lazy developers. This time, the release focuses on adding new features rather than changing too much in the underlying architecture. That will _[spoiler alert!]_ come soon in Cot v0.6!
