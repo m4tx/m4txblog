@@ -18,7 +18,7 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(nightly)'] }
 [workspace.dependencies]
 atom_syndication = "0.12"
 chrono = "0.4"
-comrak = "0.49"
+comrak = "0.50"
 cot = { version = "0.5", default-features = false }
 grass = "0.13"
 indexmap = "2.12"
