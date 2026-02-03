@@ -71,7 +71,10 @@ impl<'a> BlogFeedBuilder<'a> {
             )
             .rights(
                 TextBuilder::default()
-                    .value("© 2010-2025 Mateusz Maćkowski. All texts on the CC-BY-ND license.")
+                    .value(format!(
+                        "© 2010-{} Mateusz Maćkowski. All texts on the CC-BY-ND license.",
+                        crate::template_util::current_year()
+                    ))
                     .lang(LANG.to_owned())
                     .build(),
             )
