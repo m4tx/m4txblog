@@ -1,0 +1,16 @@
+name: Prek checks
+on: [push, pull_request]
+
+jobs:
+  prek:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Run prek
+        uses: j178/prek-action@v1
+        with:
+          extra-args: '--skip oxipng'

@@ -5,11 +5,7 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = [
-    ".",
-    "m4txblog-common",
-    "m4txblog-macros",
-]
+members = [".", "m4txblog-common", "m4txblog-macros"]
 resolver = "2"
 
 [lints.rust]
@@ -53,6 +49,6 @@ lightningcss.workspace = true
 
 [package.metadata.cargo-machete]
 ignored = [
-    # used by the values returned by the md_guide! macro
-    "chrono",
+  # used by the values returned by the md_guide! macro
+  "chrono",
 ]

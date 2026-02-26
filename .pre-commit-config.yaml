@@ -6,8 +6,7 @@ ci:
   autoupdate_schedule: "monthly"
 fail_fast: false
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+  - repo: builtin
     hooks:
       - id: check-added-large-files
         args: ["--maxkb=2048"]
@@ -28,13 +27,28 @@ repos:
 
   - repo: local
     hooks:
-      - id: fmt
+      - id: taplo-fmt
+        name: taplo fmt
+        entry: taplo fmt
+        language: python
+        additional_dependencies: ["taplo==0.9.3"]
+        types: [toml]
+
+  - repo: local
+    hooks:
+      - id: cargo-fmt
         name: cargo fmt
-        files: ^.*\.(rs|toml)$
-        exclude: ^cot-cli/src/project_template/
-        language: rust
-        entry: cargo fmt
+        entry: cargo fmt --
+        language: system
+        types: [rust]
+        pass_filenames: false # This makes it a lot faster
+
+      - id: cargo-clippy
+        name: cargo clippy
+        language: system
+        types: [rust]
         pass_filenames: false
+        entry: cargo clippy --all-targets --all-features -- -D warnings
 
   - repo: https://github.com/adamryczkowski/beautysh
     rev: v6.2.3
