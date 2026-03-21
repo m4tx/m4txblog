@@ -2,6 +2,7 @@
 title: "Cot v0.6: Lazy Underneath"
 permalink: "cot-v06-lazy-underneath"
 date: 2026-03-18 23:35:01+0000
+reddit_link: https://www.reddit.com/r/rust/comments/1rxw6q7/cot_v06_lazy_underneath/
 ---
 
 Following up on [our previous announcement](/blog/cot-v05-new-features-for-lazy-web-developers/), Cot v0.6 is finally here! This release is all about major "under the hood" improvements that set the stage for a more modular and performant future. Let's dive into what's new.
