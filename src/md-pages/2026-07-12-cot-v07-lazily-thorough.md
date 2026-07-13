@@ -2,6 +2,7 @@
 title: "Cot v0.7: Lazily Thorough"
 permalink: "cot-v07-lazily-thorough"
 date: 2026-07-13 19:30:00+0000
+reddit_link: https://www.reddit.com/r/rust/comments/1uvmkfz/cot_v07_lazily_thorough_or_the_new_version_of_the/
 ---
 
 Following up on [our previous announcement](/blog/cot-v06-lazy-underneath/), Cot v0.7 is here! This release packs in a wide range of improvements across forms, the ORM, security, and developer ergonomics. Let's dig in.
