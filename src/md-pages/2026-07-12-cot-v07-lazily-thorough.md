@@ -177,7 +177,7 @@ As part of the documentation improvements, the ORM guide has got [an entire new 
 
 ## What's next?
 
-We have a bunch of ORM-related features on the roadmap, and we're starting to plan a background task system for Cot. We're also looking into the idea of releasing the 1.0 version closer to the end of 2026, which would give users a promise for long-term stability. If you have any ideas for the first major release, let us know on [the discussion page](https://github.com/cot-rs/cot/issues/434)!
+We have a bunch of ORM-related features on the roadmap, and we're starting to plan a background task system for Cot. We're also looking into the idea of releasing the 1.0 version at some point in the future, which would give users a promise for long-term stability. If you have any ideas for the first major release, let us know on [the discussion page](https://github.com/cot-rs/cot/issues/434)!
 
 Ready to build? Head over to the [Cot website](https://cot.rs/guide/latest/) for the updated guide.
 
