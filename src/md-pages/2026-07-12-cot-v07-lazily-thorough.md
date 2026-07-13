@@ -163,7 +163,7 @@ async fn handler(config: ProjectConfig) -> cot::Result<Html> {
 
 ### Guide code snippets are now tested
 
-As promised in the v0.6 blog post, all code examples in the [Cot guide](https://cot.rs/guide/latest/) are now automatically compiled and tested as part of the CI pipeline. This means that the guide will never silently drift out of sync with the framework-if a change breaks a guide example, the build fails. This is a huge win for the maintainability of the documentation, and a proof that the documentation is a first-class citizen in Cot.
+As promised in the v0.6 blog post, all code examples in the [Cot guide](https://cot.rs/guide/latest/) are now automatically compiled and tested as part of the CI pipeline. This means that the guide will never silently drift out of sync with the framework - if a change breaks a guide example, the build fails. This is a huge win for the maintainability of the documentation, and a proof that the documentation is a first-class citizen in Cot.
 
 As part of the documentation improvements, the ORM guide has got [an entire new page about making queries](https://cot.rs/guide/v0.7/databases/queries/). We'll be adding more content to the guide in the coming months, so stay tuned!
 
