@@ -118,7 +118,13 @@ caused by:
    0: connection refused (os error 111)
 ```
 
-[![Screenshot placeholder: improved cot error output in a terminal](/static/images/blog/2026-07-13-cot-v07-lazily-thorough-error-output.png)](/static/images/blog/2026-07-13-cot-v07-lazily-thorough-error-output.png)
+This will turn this:
+
+[![Screenshot placeholder: improved cot error output in a terminal](/static/images/blog/2026-07-13-cot-v07-lazily-thorough-error-old.png)](/static/images/blog/2026-07-13-cot-v07-lazily-thorough-error-old.png)
+
+into this:
+
+[![Screenshot placeholder: improved cot error output in a terminal](/static/images/blog/2026-07-13-cot-v07-lazily-thorough-error-new.png)](/static/images/blog/2026-07-13-cot-v07-lazily-thorough-error-new.png)
 
 If you do need the raw `Debug` output-for example, in unit tests-you can still get it with the alternate formatter `{:#?}`.
 
@@ -159,7 +165,7 @@ async fn handler(config: ProjectConfig) -> cot::Result<Html> {
 
 As promised in the v0.6 blog post, all code examples in the [Cot guide](https://cot.rs/guide/latest/) are now automatically compiled and tested as part of the CI pipeline. This means that the guide will never silently drift out of sync with the framework-if a change breaks a guide example, the build fails. This is a huge win for the maintainability of the documentation, and a proof that the documentation is a first-class citizen in Cot.
 
-As part of the documentation improvements, the ORM guide has got an entire new page about making queries. We'll be adding more content to the guide in the coming months, so stay tuned!
+As part of the documentation improvements, the ORM guide has got [an entire new page about making queries](https://cot.rs/guide/v0.7/databases/queries/). We'll be adding more content to the guide in the coming months, so stay tuned!
 
 ### Other improvements
 
