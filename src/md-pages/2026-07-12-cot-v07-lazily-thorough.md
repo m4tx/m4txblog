@@ -126,7 +126,7 @@ into this:
 
 [![Screenshot placeholder: improved cot error output in a terminal](/static/images/blog/2026-07-13-cot-v07-lazily-thorough-error-new.png)](/static/images/blog/2026-07-13-cot-v07-lazily-thorough-error-new.png)
 
-If you do need the raw `Debug` output-for example, in unit tests-you can still get it with the alternate formatter `{:#?}`.
+If you do need the raw `Debug` output - for example, in unit tests - you can still get it with the alternate formatter `{:#?}`.
 
 ### Extra project configuration
 
