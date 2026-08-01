@@ -11,6 +11,6 @@ jobs:
           submodules: recursive
 
       - name: Run prek
-        uses: j178/prek-action@v2
+        uses: j178/prek-action@v2.0.6
         with:
           extra-args: '--skip oxipng'
