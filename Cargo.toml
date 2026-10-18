@@ -15,7 +15,7 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(nightly)'] }
 atom_syndication = "0.12"
 chrono = "0.4"
 comrak = "0.55"
-cot = { git = "https://github.com/cot-rs/cot.git", rev = "f171f06538a5daedbb5f6c4b098dcbc90002241f", default-features = false }
+cot = { git = "https://github.com/cot-rs/cot.git", rev = "fae8e498f204670e1e12da4666caaf498a9cdef2", default-features = false }
 grass = "0.13"
 indexmap = "2.14"
 lightningcss = "1.0.0-alpha.68"

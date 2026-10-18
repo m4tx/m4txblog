@@ -631,7 +631,7 @@ checksum = "7f8f80099a98041a3d1622845c271458a2d73e688351bf3cb999266764b81d48"
 [[package]]
 name = "cot"
 version = "0.7.0"
-source = "git+https://github.com/cot-rs/cot.git?rev=f171f06538a5daedbb5f6c4b098dcbc90002241f#f171f06538a5daedbb5f6c4b098dcbc90002241f"
+source = "git+https://github.com/cot-rs/cot.git?rev=fae8e498f204670e1e12da4666caaf498a9cdef2#fae8e498f204670e1e12da4666caaf498a9cdef2"
 dependencies = [
  "ahash 0.8.12",
  "anstyle",
@@ -686,7 +686,7 @@ dependencies = [
 [[package]]
 name = "cot_codegen"
 version = "0.7.0"
-source = "git+https://github.com/cot-rs/cot.git?rev=f171f06538a5daedbb5f6c4b098dcbc90002241f#f171f06538a5daedbb5f6c4b098dcbc90002241f"
+source = "git+https://github.com/cot-rs/cot.git?rev=fae8e498f204670e1e12da4666caaf498a9cdef2#fae8e498f204670e1e12da4666caaf498a9cdef2"
 dependencies = [
  "darling 0.24.1",
  "heck",
@@ -698,7 +698,7 @@ dependencies = [
 [[package]]
 name = "cot_core"
 version = "0.7.0"
-source = "git+https://github.com/cot-rs/cot.git?rev=f171f06538a5daedbb5f6c4b098dcbc90002241f#f171f06538a5daedbb5f6c4b098dcbc90002241f"
+source = "git+https://github.com/cot-rs/cot.git?rev=fae8e498f204670e1e12da4666caaf498a9cdef2#fae8e498f204670e1e12da4666caaf498a9cdef2"
 dependencies = [
  "askama",
  "backtrace",
@@ -725,7 +725,7 @@ dependencies = [
 [[package]]
 name = "cot_macros"
 version = "0.7.0"
-source = "git+https://github.com/cot-rs/cot.git?rev=f171f06538a5daedbb5f6c4b098dcbc90002241f#f171f06538a5daedbb5f6c4b098dcbc90002241f"
+source = "git+https://github.com/cot-rs/cot.git?rev=fae8e498f204670e1e12da4666caaf498a9cdef2#fae8e498f204670e1e12da4666caaf498a9cdef2"
 dependencies = [
  "askama_derive",
  "cot_codegen",
