@@ -3,9 +3,9 @@
 {%- if comments_open || !comments.is_empty() || post.has_discussion_links() -%}
     <section id="comments" class="comments">
         <hr>
-        <h2>{{ strings.heading }}</h2>
+        <h2>Comments</h2>
         {%- if post.has_discussion_links() -%}
-            <p class="mb-1">{{ strings.discuss_on }}</p>
+            <p class="mb-1">Discuss this post on:</p>
             <ul>
                 {%- if let Some(reddit_link) = post.reddit_link -%}
                     <li>
@@ -25,15 +25,15 @@
                 {%- endif -%}
             </ul>
             {%- if comments_open -%}
-                <p>{{ strings.discuss_here }}</p>
+                <p>or leave a comment below.</p>
             {%- endif -%}
         {%- endif -%}
         {%- if comment_pending -%}
-            <div class="alert alert-success" role="status">{{ strings.pending }}</div>
+            <div class="alert alert-success" role="status">Thank you! Your comment is awaiting moderation.</div>
         {%- endif -%}
         {%- if comments.is_empty() -%}
             {%- if comments_open -%}
-                <p class="text-body-secondary">{{ strings.no_comments }}</p>
+                <p class="text-body-secondary">There are no comments yet.</p>
             {%- endif -%}
         {%- else -%}
             <ol class="comment-list list-unstyled">
@@ -49,10 +49,10 @@
                                 <span class="comment-author">{{ comment.author_name }}</span>
                             {%- endif -%}
                             {%- if comment.is_site_owner -%}
-                                <span class="badge text-bg-primary">{{ strings.author_badge }}</span>
+                                <span class="badge text-bg-primary">author</span>
                             {%- endif -%}
                             {%- if let Some(parent_author) = comment.in_reply_to -%}
-                                <span class="text-body-secondary">{{ strings.in_reply_to }} {{ parent_author }}</span>
+                                <span class="text-body-secondary">in reply to {{ parent_author }}</span>
                             {%- endif -%}
                             <a href="#comment-{{ comment.id }}" class="comment-date blog-post-meta">
                                 <time datetime="{{ comment.created_at.to_rfc3339() }}">{{ comment.created_at.format("%d %B %Y, %H:%M") }}</time>
@@ -63,7 +63,7 @@
                             <a href="?replytocom={{ comment.id }}#respond"
                                class="comment-reply-link"
                                data-comment-id="{{ comment.id }}"
-                               data-comment-author="{{ comment.author_name }}">{{ strings.reply }}</a>
+                               data-comment-author="{{ comment.author_name }}">Reply</a>
                         {%- endif -%}
                     </li>
                 {%- endfor -%}
@@ -74,28 +74,28 @@
                   class="comment-form mt-4"
                   action="{{ cot::reverse!(urls, "post_comment", page = post.link, lang = post.language)? }}"
                   method="post">
-                <h3 class="h4">{{ strings.leave_comment }}</h3>
+                <h3 class="h4">Leave a comment</h3>
                 {%- if comment_form.has_errors() -%}
                     <div class="alert alert-danger" role="alert">
-                        {{ strings.form_errors }}
+                        Please correct the errors below.
                         {%- for error in comment_form.errors("") %} {{ error }}
                         {% endfor -%}
                     </div>
                 {%- endif -%}
                 <div class="comment-reply-to alert alert-secondary py-2"
                      {% if reply_to.is_none() %}hidden{% endif %}>
-                    {{ strings.replying_to }}
+                    Replying to
                     <strong class="comment-reply-to-author">
                         {%- if let Some(reply_to) = reply_to -%}{{ reply_to.author_name }}{%- endif -%}
                         </strong>
-                        · <a href="?#respond" class="comment-cancel-reply">{{ strings.cancel_reply }}</a>
+                        · <a href="?#respond" class="comment-cancel-reply">Cancel</a>
                     </div>
                     <input type="hidden"
                            name="parent"
                            value="{%- if let Some(reply_to) = reply_to -%}{{ reply_to.id }}{%- endif -%}">
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label for="comment-author-name" class="form-label">{{ strings.name }}</label>
+                            <label for="comment-author-name" class="form-label">Name</label>
                             <input type="text"
                                    id="comment-author-name"
                                    name="author_name"
@@ -109,7 +109,7 @@
                             {%- endfor -%}
                         </div>
                         <div class="col-md-4">
-                            <label for="comment-author-email" class="form-label">{{ strings.email }}</label>
+                            <label for="comment-author-email" class="form-label">E-mail (optional, never published)</label>
                             <input type="email"
                                    id="comment-author-email"
                                    name="author_email"
@@ -122,7 +122,7 @@
                             {%- endfor -%}
                         </div>
                         <div class="col-md-4">
-                            <label for="comment-author-url" class="form-label">{{ strings.website }}</label>
+                            <label for="comment-author-url" class="form-label">Website (optional)</label>
                             <input type="url"
                                    id="comment-author-url"
                                    name="author_url"
@@ -145,7 +145,7 @@
                                autocomplete="off">
                     </div>
                     <div class="mb-3">
-                        <label for="comment-content" class="form-label">{{ strings.comment }}</label>
+                        <label for="comment-content" class="form-label">Comment</label>
                         <textarea id="comment-content"
                                   name="content"
                                   class="form-control{{ comment_form.invalid_class("content") }}"
@@ -156,8 +156,8 @@
                             <div class="invalid-feedback">{{ error }}</div>
                         {%- endfor -%}
                         <div class="form-text">
-                            {{ strings.markdown_hint }} <a href="https://commonmark.org/help/">{{ strings.markdown_link }}</a>.
-                            {{ strings.moderation_notice }}
+                            You may use <a href="https://commonmark.org/help/">Markdown</a>.
+                            Comments with more than one link are held for moderation.
                         </div>
                     </div>
                     <div class="form-check mb-3">
@@ -169,16 +169,16 @@
                                {% if comment_form.is_checked("consent") %}checked{% endif %}
                                required>
                         <label for="comment-consent" class="form-check-label">
-                            {{ strings.consent }} <a href="{{ cot::reverse!(urls, "privacy")? }}">{{ strings.privacy_policy }}</a>.
+                            I agree to my name, website, and comment being stored and published as described in the <a href="{{ cot::reverse!(urls, "privacy")? }}">privacy policy</a>.
                         </label>
                         {%- for error in comment_form.errors("consent") -%}
                             <div class="invalid-feedback">{{ error }}</div>
                         {%- endfor -%}
                     </div>
                     <div class="form-text mb-3">
-                        {{ strings.akismet_notice }} <a href="https://akismet.com/privacy/">{{ strings.akismet_link }}</a>
+                        This site uses Akismet to reduce spam. <a href="https://akismet.com/privacy/">Learn how your comment data is processed.</a>
                     </div>
-                    <button type="submit" class="btn btn-primary">{{ strings.submit }}</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
                 <script>
             (() => {
@@ -208,7 +208,7 @@
             })();
                 </script>
             {%- elif !comments.is_empty() -%}
-                <p class="text-body-secondary">{{ strings.closed }}</p>
+                <p class="text-body-secondary">Comments are closed for this post.</p>
             {%- endif -%}
         </section>
     {%- endif -%}

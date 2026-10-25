@@ -22,16 +22,17 @@ use cot::db::impl_sqlite::SqliteValueRef;
 use cot::db::query::{Expr, ExprSort};
 use cot::db::{
     Auto, ColumnType, Database, DatabaseField, DbValue, ForeignKey, FromDbValue, LimitedString,
-    Model, SqlxValueRef, ToDbValue, model,
+    Model, SqlxValueRef, ToDbValue, model, query,
 };
 use cot::email::EmailMessage;
 use cot::form::fields::{SelectAsFormField, SelectChoice};
 use cot::form::{Form, FormContext, FormErrorTarget, FormFieldValidationError, FormResult};
 use cot::http::header::{REFERER, USER_AGENT};
 use cot::request::{Request, RequestExt};
+use instant_akismet::CheckResult;
 use serde::Deserialize;
 
-use crate::akismet::{Akismet, CommentCheck, Verdict};
+use crate::akismet::{Akismet, CommentCheck};
 
 /// Replies nested deeper than this are shown at this depth.
 const MAX_DEPTH: usize = 2;
@@ -245,22 +246,16 @@ pub async fn approved_comments(
     permalink: &str,
     language: &str,
 ) -> cot::Result<Vec<DisplayComment>> {
-    let mut comments = Comment::objects()
-        .filter(Expr::and(
-            Expr::eq(
-                Expr::field("post_permalink"),
-                Expr::value(permalink.to_owned()),
-            ),
-            Expr::and(
-                Expr::eq(
-                    Expr::field("post_language"),
-                    Expr::value(language.to_owned()),
-                ),
-                Expr::eq(Expr::field("status"), Expr::value(CommentStatus::Approved)),
-            ),
-        ))
-        .all(db)
-        .await?;
+    let permalink = LimitedString::<255>::new(permalink).map_err(cot::Error::internal)?;
+    let language = LimitedString::<8>::new(language).map_err(cot::Error::internal)?;
+    let mut comments = query!(
+        Comment,
+        $post_permalink == permalink
+            && $post_language == language
+            && $status == CommentStatus::Approved
+    )
+    .all(db)
+    .await?;
     comments.sort_by_key(|comment| (comment.created_at, comment.id()));
 
     Ok(flatten_comment_tree(&comments))
@@ -403,6 +398,43 @@ impl CommentFormState {
         state
     }
 
+    /// Creates the state of a form that passed the field validation (to
+    /// display errors found later).
+    fn from_form(form: &CommentForm) -> Self {
+        let values = [
+            (
+                "parent",
+                form.parent
+                    .map(|parent| parent.to_string())
+                    .unwrap_or_default(),
+            ),
+            ("author_name", form.author_name.to_string()),
+            (
+                "author_email",
+                form.author_email
+                    .as_ref()
+                    .map(|email| email.as_str().to_owned())
+                    .unwrap_or_default(),
+            ),
+            (
+                "author_url",
+                form.author_url
+                    .as_ref()
+                    .map(|url| url.as_str().to_owned())
+                    .unwrap_or_default(),
+            ),
+            ("content", form.content.clone()),
+            ("consent", form.consent.to_string()),
+        ];
+        Self {
+            values: values
+                .into_iter()
+                .map(|(key, value)| (key.to_owned(), value))
+                .collect(),
+            errors: HashMap::new(),
+        }
+    }
+
     fn with_form_error(mut self, field: &str, error: impl Into<String>) -> Self {
         self.errors
             .entry(field.to_owned())
@@ -465,10 +497,6 @@ pub async fn submit_comment(
     auth: &Auth,
     target: &CommentTarget<'_>,
 ) -> cot::Result<CommentSubmission> {
-    let user_ip = client_ip(request);
-    let user_agent = header_value(request, USER_AGENT);
-    let referrer = header_value(request, REFERER);
-
     let form = match CommentForm::from_request(request).await? {
         FormResult::Ok(form) => form,
         FormResult::ValidationError(context) => {
@@ -477,161 +505,26 @@ pub async fn submit_comment(
             )));
         }
     };
-
-    if form
-        .subject
-        .as_deref()
-        .is_some_and(|value| !value.is_empty())
-    {
+    if form.is_honeypot_filled() {
         tracing::info!("dropping a comment with the honeypot field filled");
         return Ok(CommentSubmission::Pending);
     }
-
-    let state_for_errors = || {
-        let mut state = CommentFormState::default();
-        let values = [
-            (
-                "parent",
-                form.parent.map(|p| p.to_string()).unwrap_or_default(),
-            ),
-            ("author_name", form.author_name.to_string()),
-            (
-                "author_email",
-                form.author_email
-                    .as_ref()
-                    .map(|email| email.as_str().to_owned())
-                    .unwrap_or_default(),
-            ),
-            (
-                "author_url",
-                form.author_url
-                    .as_ref()
-                    .map(|url| url.as_str().to_owned())
-                    .unwrap_or_default(),
-            ),
-            ("content", form.content.clone()),
-            ("consent", form.consent.to_string()),
-        ];
-        for (key, value) in values {
-            state.values.insert(key.to_owned(), value);
-        }
-        state
-    };
-
-    if !target.comments_open {
-        return Ok(CommentSubmission::Invalid(
-            state_for_errors().with_form_error("", "Comments are closed for this post."),
-        ));
-    }
-    let author_name = form.author_name.trim();
-    let content = form.content.trim();
-    if author_name.is_empty() {
-        return Ok(CommentSubmission::Invalid(
-            state_for_errors().with_form_error(
-                "author_name",
-                FormFieldValidationError::Required.to_string(),
-            ),
-        ));
-    }
-    if content.is_empty() {
-        return Ok(CommentSubmission::Invalid(
-            state_for_errors()
-                .with_form_error("content", FormFieldValidationError::Required.to_string()),
-        ));
-    }
-
-    let author_url = form.author_url.as_ref().map(|url| url.as_str());
-    if author_url.is_some_and(|url| !url.starts_with("http://") && !url.starts_with("https://")) {
-        return Ok(CommentSubmission::Invalid(
-            state_for_errors().with_form_error(
-                "author_url",
-                "Only http:// and https:// addresses are allowed.",
-            ),
-        ));
-    }
-
-    let parent = if let Some(parent_id) = form.parent {
-        let parent = Comment::objects()
-            .filter(Expr::eq(Expr::field("id"), Expr::value(parent_id)))
-            .get(db)
-            .await?;
-        match parent {
-            Some(parent)
-                if parent.status == CommentStatus::Approved
-                    && parent.post_permalink.as_str() == target.permalink
-                    && parent.post_language.as_str() == target.language =>
-            {
-                Some(parent)
-            }
-            _ => {
-                return Ok(CommentSubmission::Invalid(
-                    state_for_errors()
-                        .with_form_error("", "The comment you're replying to doesn't exist."),
-                ));
-            }
-        }
-    } else {
-        None
+    let comment = match form.validate(db, target).await? {
+        Ok(comment) => comment,
+        Err(form_state) => return Ok(CommentSubmission::Invalid(form_state)),
     };
 
     let is_site_owner = auth.user().is_authenticated();
-    let author_email = form.author_email.as_ref().map(|email| email.as_str());
-
     let status = if is_site_owner {
         CommentStatus::Approved
     } else {
-        let check = CommentCheck {
-            user_ip: &user_ip,
-            user_agent: &user_agent,
-            referrer: &referrer,
-            permalink: target.post_url,
-            is_reply: parent.is_some(),
-            author: author_name,
-            author_email: author_email.unwrap_or_default(),
-            author_url: author_url.unwrap_or_default(),
-            content,
-            language: target.language,
-        };
-        match spam_check(&check).await {
-            Some(Verdict::Discard) => {
-                tracing::info!("discarding a comment marked as blatant spam by Akismet");
-                return Ok(CommentSubmission::Pending);
-            }
-            Some(Verdict::Spam) => CommentStatus::Spam,
-            Some(Verdict::Ham) if count_links(content) <= MAX_LINKS => CommentStatus::Approved,
-            // Too many links, or Akismet is unavailable
-            Some(Verdict::Ham) | None => CommentStatus::Pending,
+        match moderate(request, &comment, target).await {
+            Some(status) => status,
+            None => return Ok(CommentSubmission::Pending),
         }
     };
 
-    let mut comment = Comment {
-        id: Auto::auto(),
-        post_permalink: LimitedString::new(target.permalink).map_err(cot::Error::internal)?,
-        post_language: LimitedString::new(target.language).map_err(cot::Error::internal)?,
-        parent: parent.map(ForeignKey::from),
-        author_name: LimitedString::new(author_name).expect("already validated"),
-        author_email: author_email
-            .map(LimitedString::new)
-            .transpose()
-            .map_err(|_| cot::Error::internal("e-mail too long"))?,
-        author_url: author_url
-            .map(LimitedString::new)
-            .transpose()
-            .map_err(|_| cot::Error::internal("URL too long"))?,
-        content: content.to_owned(),
-        status,
-        is_site_owner,
-        created_at: chrono::Utc::now().fixed_offset(),
-    };
-    comment.insert(db).await?;
-    tracing::info!(
-        "new comment #{} on {} ({}): {:?}",
-        comment.id(),
-        target.permalink,
-        target.language,
-        status
-    );
-
+    let comment = comment.save(db, target, status, is_site_owner).await?;
     if !is_site_owner && status != CommentStatus::Spam {
         notify_about_comment(request, &comment, target.post_url);
     }
@@ -640,6 +533,168 @@ pub async fn submit_comment(
         Ok(CommentSubmission::Published { id: comment.id() })
     } else {
         Ok(CommentSubmission::Pending)
+    }
+}
+
+/// A submitted comment that has passed the validation.
+#[derive(Debug)]
+struct ValidComment<'a> {
+    parent: Option<Comment>,
+    author_name: &'a str,
+    author_email: Option<&'a str>,
+    author_url: Option<&'a str>,
+    content: &'a str,
+}
+
+impl CommentForm {
+    fn is_honeypot_filled(&self) -> bool {
+        self.subject
+            .as_deref()
+            .is_some_and(|value| !value.is_empty())
+    }
+
+    /// Performs the checks that the form fields can't do by themselves.
+    ///
+    /// Returns the form state to display if the comment is invalid.
+    async fn validate(
+        &self,
+        db: &Database,
+        target: &CommentTarget<'_>,
+    ) -> cot::Result<Result<ValidComment<'_>, CommentFormState>> {
+        let invalid = |field: &str, error: &str| {
+            CommentFormState::from_form(self).with_form_error(field, error)
+        };
+        let required = FormFieldValidationError::Required.to_string();
+
+        if !target.comments_open {
+            return Ok(Err(invalid("", "Comments are closed for this post.")));
+        }
+        let author_name = self.author_name.trim();
+        if author_name.is_empty() {
+            return Ok(Err(invalid("author_name", &required)));
+        }
+        let content = self.content.trim();
+        if content.is_empty() {
+            return Ok(Err(invalid("content", &required)));
+        }
+        let author_url = self.author_url.as_ref().map(Url::as_str);
+        if author_url.is_some_and(|url| !url.starts_with("http://") && !url.starts_with("https://"))
+        {
+            return Ok(Err(invalid(
+                "author_url",
+                "Only http:// and https:// addresses are allowed.",
+            )));
+        }
+        let parent = match self.parent {
+            Some(parent_id) => match find_reply_parent(db, parent_id, target).await? {
+                Some(parent) => Some(parent),
+                None => {
+                    return Ok(Err(invalid(
+                        "",
+                        "The comment you're replying to doesn't exist.",
+                    )));
+                }
+            },
+            None => None,
+        };
+
+        Ok(Ok(ValidComment {
+            parent,
+            author_name,
+            author_email: self.author_email.as_ref().map(Email::as_str),
+            author_url,
+            content,
+        }))
+    }
+}
+
+/// Returns the comment with the given ID if it can be replied to, i.e. it's an
+/// approved comment on the same post.
+async fn find_reply_parent(
+    db: &Database,
+    id: i64,
+    target: &CommentTarget<'_>,
+) -> cot::Result<Option<Comment>> {
+    let parent = query!(Comment, $id == id).get(db).await?;
+    Ok(parent.filter(|parent| {
+        parent.status == CommentStatus::Approved
+            && parent.post_permalink.as_str() == target.permalink
+            && parent.post_language.as_str() == target.language
+    }))
+}
+
+/// Decides on the status of a comment that wasn't posted by the site owner.
+///
+/// Returns `None` if the comment should be silently discarded.
+async fn moderate(
+    request: &Request,
+    comment: &ValidComment<'_>,
+    target: &CommentTarget<'_>,
+) -> Option<CommentStatus> {
+    let check = CommentCheck {
+        user_ip: &client_ip(request),
+        user_agent: &header_value(request, USER_AGENT),
+        referrer: &header_value(request, REFERER),
+        permalink: target.post_url,
+        is_reply: comment.parent.is_some(),
+        author: comment.author_name,
+        author_email: comment.author_email.unwrap_or_default(),
+        author_url: comment.author_url.unwrap_or_default(),
+        content: comment.content,
+        language: target.language,
+    };
+    match spam_check(&check).await {
+        Some(CheckResult::Discard) => {
+            tracing::info!("discarding a comment marked as blatant spam by Akismet");
+            None
+        }
+        Some(CheckResult::Spam) => Some(CommentStatus::Spam),
+        Some(CheckResult::Ham) if count_links(comment.content) <= MAX_LINKS => {
+            Some(CommentStatus::Approved)
+        }
+        // Too many links, or Akismet is unavailable
+        Some(CheckResult::Ham) | None => Some(CommentStatus::Pending),
+    }
+}
+
+impl ValidComment<'_> {
+    async fn save(
+        self,
+        db: &Database,
+        target: &CommentTarget<'_>,
+        status: CommentStatus,
+        is_site_owner: bool,
+    ) -> cot::Result<Comment> {
+        let mut comment = Comment {
+            id: Auto::auto(),
+            post_permalink: LimitedString::new(target.permalink).map_err(cot::Error::internal)?,
+            post_language: LimitedString::new(target.language).map_err(cot::Error::internal)?,
+            parent: self.parent.map(ForeignKey::from),
+            author_name: LimitedString::new(self.author_name).expect("already validated"),
+            author_email: self
+                .author_email
+                .map(LimitedString::new)
+                .transpose()
+                .map_err(|_| cot::Error::internal("e-mail too long"))?,
+            author_url: self
+                .author_url
+                .map(LimitedString::new)
+                .transpose()
+                .map_err(|_| cot::Error::internal("URL too long"))?,
+            content: self.content.to_owned(),
+            status,
+            is_site_owner,
+            created_at: chrono::Utc::now().fixed_offset(),
+        };
+        comment.insert(db).await?;
+        tracing::info!(
+            "new comment #{} on {} ({}): {:?}",
+            comment.id(),
+            target.permalink,
+            target.language,
+            status
+        );
+        Ok(comment)
     }
 }
 
@@ -713,7 +768,7 @@ fn notify_about_comment(request: &Request, comment: &Comment, post_url: &str) {
     });
 }
 
-async fn spam_check(check: &CommentCheck<'_>) -> Option<Verdict> {
+async fn spam_check(check: &CommentCheck<'_>) -> Option<CheckResult> {
     let Some(akismet) = AKISMET.get().and_then(Option::as_ref) else {
         tracing::warn!("Akismet is not configured; skipping the spam check");
         return None;

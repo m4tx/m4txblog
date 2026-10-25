@@ -117,7 +117,6 @@ struct PostTemplate<'a> {
     comment_form: &'a CommentFormState,
     comment_pending: bool,
     reply_to: Option<&'a DisplayComment>,
-    strings: &'static CommentStrings,
     base_context: &'a BaseContext,
 }
 
@@ -228,7 +227,6 @@ async fn render_post(
         comment_form,
         comment_pending: query.comment.as_deref() == Some("pending"),
         reply_to,
-        strings: CommentStrings::for_language(&post.language),
         base_context,
     };
 
@@ -279,102 +277,6 @@ fn see_other(location: &str) -> Response {
         .expect("valid response")
 }
 
-/// UI strings for the comments section, in the language of the post.
-#[derive(Debug)]
-struct CommentStrings {
-    heading: &'static str,
-    discuss_on: &'static str,
-    discuss_here: &'static str,
-    no_comments: &'static str,
-    closed: &'static str,
-    leave_comment: &'static str,
-    reply: &'static str,
-    replying_to: &'static str,
-    cancel_reply: &'static str,
-    in_reply_to: &'static str,
-    author_badge: &'static str,
-    name: &'static str,
-    email: &'static str,
-    website: &'static str,
-    comment: &'static str,
-    markdown_hint: &'static str,
-    markdown_link: &'static str,
-    consent: &'static str,
-    privacy_policy: &'static str,
-    akismet_notice: &'static str,
-    akismet_link: &'static str,
-    moderation_notice: &'static str,
-    submit: &'static str,
-    pending: &'static str,
-    form_errors: &'static str,
-}
-
-impl CommentStrings {
-    const EN: Self = Self {
-        heading: "Comments",
-        discuss_on: "Discuss this post on:",
-        discuss_here: "or leave a comment below.",
-        no_comments: "There are no comments yet.",
-        closed: "Comments are closed for this post.",
-        leave_comment: "Leave a comment",
-        reply: "Reply",
-        replying_to: "Replying to",
-        cancel_reply: "Cancel",
-        in_reply_to: "in reply to",
-        author_badge: "author",
-        name: "Name",
-        email: "E-mail (optional, never published)",
-        website: "Website (optional)",
-        comment: "Comment",
-        markdown_hint: "You may use",
-        markdown_link: "Markdown",
-        consent: "I agree to my name, website, and comment being stored and published as described in the",
-        privacy_policy: "privacy policy",
-        akismet_notice: "This site uses Akismet to reduce spam.",
-        akismet_link: "Learn how your comment data is processed.",
-        moderation_notice: "Comments with more than one link are held for moderation.",
-        submit: "Submit",
-        pending: "Thank you! Your comment is awaiting moderation.",
-        form_errors: "Please correct the errors below.",
-    };
-
-    const PL: Self = Self {
-        heading: "Komentarze",
-        discuss_on: "Dyskutuj o tym poście na:",
-        discuss_here: "albo zostaw komentarz poniżej.",
-        no_comments: "Nie ma jeszcze żadnych komentarzy.",
-        closed: "Komentarze do tego posta są zamknięte.",
-        leave_comment: "Dodaj komentarz",
-        reply: "Odpowiedz",
-        replying_to: "Odpowiadasz na komentarz:",
-        cancel_reply: "Anuluj",
-        in_reply_to: "w odpowiedzi na",
-        author_badge: "autor",
-        name: "Imię lub pseudonim",
-        email: "E-mail (opcjonalnie, nie będzie opublikowany)",
-        website: "Strona WWW (opcjonalnie)",
-        comment: "Komentarz",
-        markdown_hint: "Możesz używać",
-        markdown_link: "Markdowna",
-        consent: "Zgadzam się na przechowywanie i publikację mojego imienia, strony WWW i komentarza zgodnie z",
-        privacy_policy: "polityką prywatności",
-        akismet_notice: "Ta strona używa Akismet do ograniczania spamu.",
-        akismet_link: "Dowiedz się, jak przetwarzane są dane komentarzy.",
-        moderation_notice: "Komentarze z więcej niż jednym linkiem czekają na moderację.",
-        submit: "Wyślij",
-        pending: "Dzięki! Twój komentarz czeka na moderację.",
-        form_errors: "Popraw błędy poniżej.",
-    };
-
-    fn for_language(language: &str) -> &'static Self {
-        if language == "pl" {
-            &Self::PL
-        } else {
-            &Self::EN
-        }
-    }
-}
-
 #[derive(Debug, Template)]
 #[template(path = "md_page.html")]
 struct MdPageTemplate<'a> {
@@ -416,8 +318,10 @@ impl App for CotSiteApp {
                 })?;
                 let akismet = Akismet::new(config);
                 match akismet.verify_key().await {
-                    Ok(true) => tracing::info!("Akismet API key verified"),
-                    Ok(false) => tracing::error!("invalid Akismet API key"),
+                    Ok(()) => tracing::info!("Akismet API key verified"),
+                    Err(instant_akismet::Error::Invalid(reason)) => {
+                        tracing::error!("invalid Akismet API key: {reason}");
+                    }
                     Err(error) => tracing::warn!("could not verify the Akismet API key: {error}"),
                 }
                 Some(akismet)

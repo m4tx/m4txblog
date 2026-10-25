@@ -128,7 +128,6 @@ impl Site {
 struct LegacyData {
     post: Vec<LegacyPost>,
     page: Vec<LegacyPage>,
-    upload: Vec<LegacyUpload>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -148,19 +147,12 @@ struct LegacyPage {
     route: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct LegacyUpload {
-    path: String,
-    static_path: String,
-}
-
 #[derive(Debug)]
 struct LegacyIndex {
     posts_by_slug: HashMap<(Site, String), Target>,
     posts_by_id: HashMap<(Site, u64), Target>,
     pages_by_path: HashMap<(Site, String), Target>,
     pages_by_id: HashMap<(Site, u64), Target>,
-    uploads: HashMap<String, Target>,
 }
 
 static LEGACY_INDEX: LazyLock<LegacyIndex> = LazyLock::new(|| {
@@ -172,7 +164,6 @@ static LEGACY_INDEX: LazyLock<LegacyIndex> = LazyLock::new(|| {
         posts_by_id: HashMap::new(),
         pages_by_path: HashMap::new(),
         pages_by_id: HashMap::new(),
-        uploads: HashMap::new(),
     };
     for post in data.post {
         let target = Target::Post {
@@ -191,11 +182,6 @@ static LEGACY_INDEX: LazyLock<LegacyIndex> = LazyLock::new(|| {
             .insert((page.site, normalize(&page.path)), target.clone());
         index.pages_by_id.insert((page.site, page.wp_id), target);
     }
-    for upload in data.upload {
-        index
-            .uploads
-            .insert(normalize(&upload.path), Target::Static(upload.static_path));
-    }
     index
 });
 
@@ -205,8 +191,6 @@ enum Target {
     Post { permalink: String, language: String },
     /// A named route of the blog app (with no parameters).
     Route(String),
-    /// A static file path.
-    Static(String),
     /// The same path on the new domain.
     SamePath,
     /// WordPress-specific endpoints that don't make sense anymore.
@@ -314,15 +298,6 @@ fn resolve(path: &str, query: Option<&str>) -> Target {
         {
             Target::route("archive")
         }
-        (_, ["wp-content", "uploads", ..]) => {
-            let upload_path = segments[2..].join("/");
-            index
-                .uploads
-                .get(&upload_path)
-                .or_else(|| index.uploads.get(&strip_thumbnail_suffix(&upload_path)))
-                .cloned()
-                .unwrap_or(Target::SamePath)
-        }
         (_, ["wp-admin" | "wp-includes" | "wp-json", ..])
         | (_, ["wp-login.php" | "xmlrpc.php" | "wp-cron.php" | "wp-signup.php"]) => Target::Gone,
         _ => index
@@ -330,28 +305,6 @@ fn resolve(path: &str, query: Option<&str>) -> Target {
             .get(&(site, segments.join("/")))
             .cloned()
             .unwrap_or(Target::SamePath),
-    }
-}
-
-/// Converts `2011/03/image-300x225.png` to `2011/03/image.png` (WordPress
-/// generated resized versions of uploaded images with such names).
-fn strip_thumbnail_suffix(path: &str) -> String {
-    let Some((stem, extension)) = path.rsplit_once('.') else {
-        return path.to_owned();
-    };
-    let Some((base, size)) = stem.rsplit_once('-') else {
-        return path.to_owned();
-    };
-    let is_size = size.split_once('x').is_some_and(|(w, h)| {
-        !w.is_empty()
-            && !h.is_empty()
-            && w.bytes().all(|b| b.is_ascii_digit())
-            && h.bytes().all(|b| b.is_ascii_digit())
-    });
-    if is_size {
-        format!("{base}.{extension}")
-    } else {
-        path.to_owned()
     }
 }
 
@@ -380,7 +333,6 @@ fn target_path(request: &Request, target: &Target) -> cot::Result<String> {
                 .router()
                 .reverse(Some(APP_NAME), name, &cot::reverse_param_map!())?
         }
-        Target::Static(path) => format!("/{path}"),
         Target::SamePath | Target::Gone => unreachable!("handled by the caller"),
     };
     Ok(path)
@@ -417,20 +369,6 @@ mod tests {
             );
         }
         assert_eq!(LEGACY_INDEX.posts_by_id.len(), 102);
-    }
-
-    #[test]
-    fn every_upload_target_exists() {
-        let static_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("static");
-        for target in LEGACY_INDEX.uploads.values() {
-            let Target::Static(path) = target else {
-                panic!("unexpected target {target:?}");
-            };
-            assert!(
-                static_dir.join(path).is_file(),
-                "missing static file {path}"
-            );
-        }
     }
 
     #[test]
@@ -541,43 +479,10 @@ mod tests {
     }
 
     #[test]
-    fn uploads() {
-        let Target::Static(path) = resolve("/wp-content/uploads/2011/03/amarok_screen.jpeg", None)
-        else {
-            panic!("expected a static file");
-        };
-        assert!(path.ends_with("-amarok-screen.jpeg"));
-        assert_eq!(
-            resolve(
-                "/wp-content/uploads/2011/03/amarok_screen-300x225.jpeg",
-                None
-            ),
-            Target::Static(path)
-        );
-        assert_eq!(
-            resolve("/wp-content/uploads/2099/01/missing.png", None),
-            Target::SamePath
-        );
-    }
-
-    #[test]
     fn wordpress_endpoints() {
         assert_eq!(resolve("/wp-login.php", None), Target::Gone);
         assert_eq!(resolve("/xmlrpc.php", None), Target::Gone);
         assert_eq!(resolve("/wp-admin/edit.php", None), Target::Gone);
         assert_eq!(resolve("/en/wp-admin/", None), Target::Gone);
-    }
-
-    #[test]
-    fn strip_thumbnail() {
-        assert_eq!(
-            strip_thumbnail_suffix("2011/03/a-b-300x225.png"),
-            "2011/03/a-b.png"
-        );
-        assert_eq!(strip_thumbnail_suffix("2011/03/a-b.png"), "2011/03/a-b.png");
-        assert_eq!(
-            strip_thumbnail_suffix("2011/03/a-300.png"),
-            "2011/03/a-300.png"
-        );
     }
 }
