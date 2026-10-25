@@ -5,3 +5,5 @@ services:
     restart: unless-stopped
     volumes:
       - ./prod.toml:/app/prod.toml
+      # Persistent data (the SQLite database with comments)
+      - ./data:/app/data

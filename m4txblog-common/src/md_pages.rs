@@ -31,7 +31,12 @@ impl MdPage {
         time_delta.num_days() / 365
     }
 
-    pub fn accepts_comments(&self) -> bool {
+    /// Whether new comments can be posted (old posts are read-only).
+    pub fn comments_open(&self) -> bool {
+        !self.is_archived()
+    }
+
+    pub fn has_discussion_links(&self) -> bool {
         self.reddit_link.is_some() || self.hackernews_link.is_some()
     }
 }

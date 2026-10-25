@@ -8,7 +8,7 @@ COPY --from=builder /usr/local/cargo/bin/m4txblog /usr/local/bin/m4txblog
 RUN mkdir /app
 
 RUN apt-get update &&  \
-    apt-get install -y --no-install-recommends tini=0.19.* && \
+    apt-get install -y --no-install-recommends tini=0.19.* ca-certificates=2025* && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 ENTRYPOINT ["/usr/bin/tini", "--"]

@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+"""Generates `legacy_redirects.toml` from the old WordPress database.
+
+The old blog was a WordPress multisite at m4tx.pl: the Polish site (blog 1)
+was served at `/` and the English one (blog 3) at `/en/`. This script maps
+every published post (and a handful of pages and uploads) to their new
+locations, so that the server can redirect the old URLs.
+
+Posts are matched with the Markdown files in `src/md-pages/` by language and
+publication date, which is stable even when the slug has changed.
+
+Usage (requires `pymysql`):
+
+    WP_DB_PASSWORD=... ./scripts/generate_legacy_redirects.py > legacy_redirects.toml
+
+Other connection settings can be overridden with the `WP_DB_HOST`,
+`WP_DB_PORT`, `WP_DB_USER`, and `WP_DB_NAME` environment variables.
+"""
+
+import os
+import re
+import sys
+from pathlib import Path
+from urllib.parse import unquote
+
+import pymysql
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+MD_PAGES_DIR = REPO_ROOT / "src" / "md-pages"
+BLOG_IMAGES_DIR = REPO_ROOT / "static" / "static" / "images" / "blog"
+BLOG_IMAGES_URL_PREFIX = "static/images/blog/"
+
+# (site code, table prefix, language of the posts)
+SITES = [("pl", "wp_", "pl"), ("en", "wp_3_", "en")]
+
+# Pages that still have an equivalent on the new blog, mapped to route names.
+# Everything else (e.g. the old app pages) is intentionally left out and
+# results in a 404.
+PAGE_ROUTES = {
+    ("pl", "o-mnie"): "about",
+    ("pl", "cookies"): "privacy",
+    ("en", "about-me"): "about",
+    ("en", "cookies"): "privacy",
+    ("en", "go-to-m4txblog-in-polish"): "index",
+}
+
+
+def connect():
+    return pymysql.connect(
+        host=os.environ.get("WP_DB_HOST", "127.0.0.1"),
+        port=int(os.environ.get("WP_DB_PORT", "3306")),
+        user=os.environ.get("WP_DB_USER", "m4txblog"),
+        password=os.environ["WP_DB_PASSWORD"],
+        database=os.environ.get("WP_DB_NAME", "m4txblog"),
+        charset="utf8mb4",
+    )
+
+
+def read_md_pages():
+    """Returns {(language, "YYYY-MM-DD HH:MM"): (permalink, file stem)}."""
+    pages = {}
+    for path in sorted(MD_PAGES_DIR.glob("*.md")):
+        front_matter = path.read_text().split("---")[1]
+        permalink = re.search(r"^permalink:\s*['\"]?([^'\"\n]+)", front_matter, re.M)
+        date = re.search(r"^date:\s*(\S+ \d\d:\d\d)", front_matter, re.M)
+        if permalink is None or date is None:
+            continue
+        language = re.search(r"^language:\s*(\w+)", front_matter, re.M)
+        language = language.group(1) if language else "en"
+        pages[(language, date.group(1))] = (permalink.group(1).strip(), path.stem)
+    return pages
+
+
+def normalize_file_name(name):
+    """Image files were renamed inconsistently during the migration."""
+    return name.lower().replace("_", "-").replace(" ", "-")
+
+
+def toml_str(value):
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+
+def main():
+    md_pages = read_md_pages()
+    images = {path.name for path in BLOG_IMAGES_DIR.iterdir()}
+    cursor = connect().cursor()
+
+    posts, pages, uploads = [], [], []
+    post_stems = {}
+    errors = []
+
+    for site, prefix, language in SITES:
+        cursor.execute(
+            "SELECT ID, post_name, DATE_FORMAT(post_date, '%Y-%m-%d %H:%i'), "
+            "DATE_FORMAT(post_date_gmt, '%Y-%m-%d %H:%i') "
+            f"FROM {prefix}posts WHERE post_type = 'post' AND post_status = 'publish' "
+            "ORDER BY ID"
+        )
+        for wp_id, slug, date_local, date_gmt in cursor.fetchall():
+            match = md_pages.get((language, date_gmt)) or md_pages.get((language, date_local))
+            if match is None and site == "en" and slug == "hello-world":
+                # The English "Hello, world!" was re-dated to match the Polish one
+                match = md_pages.get(("en", "2010-06-28 20:09"))
+            if match is None:
+                errors.append(f"no Markdown file for {site} post {wp_id} {slug!r}")
+                continue
+            permalink, stem = match
+            posts.append((site, wp_id, unquote(slug), permalink, language))
+            post_stems[(site, wp_id)] = stem
+
+        cursor.execute(
+            f"SELECT ID, post_name, post_parent FROM {prefix}posts "
+            "WHERE post_type = 'page' AND post_status = 'publish'"
+        )
+        all_pages = {wp_id: (slug, parent) for wp_id, slug, parent in cursor.fetchall()}
+        for wp_id, (slug, _) in sorted(all_pages.items()):
+            route = PAGE_ROUTES.get((site, slug))
+            if route is None:
+                continue
+            path_parts = []
+            current = wp_id
+            while current:
+                current_slug, current = all_pages[current]
+                path_parts.insert(0, current_slug)
+            pages.append((site, wp_id, "/".join(path_parts), route))
+
+        cursor.execute(
+            "SELECT guid, post_parent FROM "
+            f"{prefix}posts WHERE post_type = 'attachment' ORDER BY ID"
+        )
+        for guid, parent in cursor.fetchall():
+            if "/wp-content/uploads/" not in guid:
+                continue
+            upload_path = guid.split("/wp-content/uploads/", 1)[1]
+            basename = normalize_file_name(upload_path.rsplit("/", 1)[-1])
+            stem = post_stems.get((site, parent))
+            candidates = [
+                image for image in images if normalize_file_name(image).endswith(f"-{basename}")
+            ]
+            if len(candidates) > 1 and stem is not None:
+                candidates = [image for image in candidates if image.startswith(stem)]
+            if len(candidates) == 1:
+                uploads.append((upload_path, BLOG_IMAGES_URL_PREFIX + candidates[0]))
+
+    slugs = [(site, slug) for site, _, slug, _, _ in posts]
+    if len(slugs) != len(set(slugs)):
+        errors.append("duplicate post slugs")
+
+    if errors:
+        for error in errors:
+            print(f"error: {error}", file=sys.stderr)
+        sys.exit(1)
+
+    out = [
+        "# Redirects from the old WordPress blog at m4tx.pl.",
+        "# Generated by scripts/generate_legacy_redirects.py; do not edit manually.",
+        "#",
+        '# `site` is "pl" for the Polish blog (served at `/`) or "en" for the English',
+        "# one (served at `/en/`).",
+    ]
+    for site, wp_id, slug, permalink, language in posts:
+        out += [
+            "",
+            "[[post]]",
+            f"site = {toml_str(site)}",
+            f"wp_id = {wp_id}",
+            f"slug = {toml_str(slug)}",
+            f"permalink = {toml_str(permalink)}",
+            f"language = {toml_str(language)}",
+        ]
+    for site, wp_id, path, route in pages:
+        out += [
+            "",
+            "[[page]]",
+            f"site = {toml_str(site)}",
+            f"wp_id = {wp_id}",
+            f"path = {toml_str(path)}",
+            f"route = {toml_str(route)}",
+        ]
+    for upload_path, static_path in uploads:
+        out += [
+            "",
+            "[[upload]]",
+            f"path = {toml_str(upload_path)}",
+            f"static_path = {toml_str(static_path)}",
+        ]
+    print("\n".join(out))
+    print(
+        f"{len(posts)} posts, {len(pages)} pages, {len(uploads)} uploads",
+        file=sys.stderr,
+    )
+
+
+if __name__ == "__main__":
+    main()

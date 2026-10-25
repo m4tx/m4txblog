@@ -16,3 +16,18 @@ cache_timeout = "1year"
 
 [middlewares.session]
 secure = false
+
+[legacy_redirects]
+hosts = ["m4tx.pl", "www.m4tx.pl"]
+target = "https://mackow.ski"
+
+[middlewares.session.store]
+type = "database"
+
+# Notification e-mails are printed to the console in development
+[email.transport]
+type = "console"
+
+[comment_notifications]
+from = "blog@localhost"
+to = "admin@localhost"
