@@ -24,11 +24,9 @@ Perhaps the least visible change is the blog engine used underneath. As you migh
 
 ## Archive
 
-_Disclaimer: I'm still in the middle of the migration process, so the archive doesn't quite work yet. Hopefully it will be ready soon._
+I've decided to archive the old posts using the new engine. I'm really ashamed about at least some of them, but I wanted to keep the history unaltered. Each one will now display a message at the top saying that "this post is really old", so that's an additional benefit to the new visitors.
 
-~~I've decided to archive the old posts using the new engine. I'm really ashamed about at least some of them, but I wanted to keep the history unaltered. Each one will now display a message at the top saying that "this post is really old", so that's an additional benefit to the new visitors.~~
-
-~~I've also decided that having a working comment section might be useful, so not only did I implement a commenting functionality, but also migrated all the comments from the old blog.~~
+I've also decided that having a working comment section might be useful, so not only did I implement a commenting functionality, but also migrated all the comments from the old blog.
 
 ## Final thoughts
 
