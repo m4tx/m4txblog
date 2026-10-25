@@ -31,7 +31,6 @@ impl MdPage {
         time_delta.num_days() / 365
     }
 
-    /// Whether new comments can be posted (old posts are read-only).
     pub fn comments_open(&self) -> bool {
         !self.is_archived()
     }

@@ -24,7 +24,6 @@ target = "https://mackow.ski"
 [middlewares.session.store]
 type = "database"
 
-# Notification e-mails are printed to the console in development
 [email.transport]
 type = "console"
 

@@ -10,11 +10,14 @@
 //! and referrer are only sent to Akismet and never saved.
 
 use std::collections::HashMap;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, Write};
 use std::sync::OnceLock;
 
 use async_trait::async_trait;
 use chrono::{DateTime, FixedOffset};
+use comrak::html::dangerous_url;
+use comrak::nodes::NodeValue;
+use comrak::{Arena, Options, create_formatter, parse_document};
 use cot::admin::{AdminModel, AdminModelManager, DefaultAdminModelManager, Pagination};
 use cot::auth::Auth;
 use cot::common_types::{Email, Url};
@@ -328,8 +331,23 @@ impl Comment {
 /// Raw HTML is escaped, dangerous URLs are removed, images are converted to
 /// links, and all links get `rel="nofollow ugc noopener"`.
 pub fn render_markdown(content: &str) -> String {
-    use comrak::nodes::NodeValue;
-    use comrak::{Arena, Options, format_html, parse_document};
+    create_formatter!(CommentFormatter, {
+        NodeValue::Link(ref link) | NodeValue::Image(ref link) => |context, entering| {
+            if entering {
+                context.write_str("<a rel=\"nofollow ugc noopener\" href=\"")?;
+                if !dangerous_url(&link.url) {
+                    context.escape_href(&link.url)?;
+                }
+                if !link.title.is_empty() {
+                    context.write_str("\" title=\"")?;
+                    context.escape(&link.title)?;
+                }
+                context.write_str("\">")?;
+            } else {
+                context.write_str("</a>")?;
+            }
+        },
+    });
 
     let mut options = Options::default();
     options.extension.autolink = true;
@@ -338,17 +356,10 @@ pub fn render_markdown(content: &str) -> String {
 
     let arena = Arena::new();
     let root = parse_document(&arena, content, &options);
-    for node in root.descendants() {
-        let mut data = node.data.borrow_mut();
-        if let NodeValue::Image(link) = &data.value {
-            data.value = NodeValue::Link(link.clone());
-        }
-    }
-
     let mut html = String::new();
-    format_html(root, &options, &mut html).expect("formatting to a String can't fail");
-    // Raw HTML is escaped, so all `<a ` tags come from comrak itself
-    html.replace("<a href=", "<a rel=\"nofollow ugc noopener\" href=")
+    CommentFormatter::format_document(root, &options, &mut html)
+        .expect("formatting to a String can't fail");
+    html
 }
 
 #[derive(Debug, Form)]
@@ -851,6 +862,19 @@ mod tests {
         assert!(
             html.contains(r#"<a rel="nofollow ugc noopener" href="https://example.com">"#),
             "{html}"
+        );
+    }
+
+    #[test]
+    fn markdown_link_attributes_are_escaped() {
+        assert_eq!(
+            render_markdown(r#"[x](https://example.com/?a=1&b="2" "say \"hi\"")"#),
+            "<p><a rel=\"nofollow ugc noopener\" href=\"https://example.com/?a=1&amp;b=%222%22\" \
+             title=\"say &quot;hi&quot;\">x</a></p>\n"
+        );
+        assert_eq!(
+            render_markdown("[x](javascript:alert(1))"),
+            "<p><a rel=\"nofollow ugc noopener\" href=\"\">x</a></p>\n"
         );
     }
 

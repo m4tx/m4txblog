@@ -99,9 +99,7 @@ pub async fn redirect_legacy(
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
 #[serde(rename_all = "lowercase")]
 enum Site {
-    /// The Polish blog, served at `/`.
     Pl,
-    /// The English blog, served at `/en/`.
     En,
 }
 

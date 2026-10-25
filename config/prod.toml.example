@@ -19,7 +19,7 @@ hosts = ["m4tx.pl", "www.m4tx.pl"]
 target = "https://mackow.ski"
 
 [akismet]
-api_key = ""  # Set this to the Akismet API key
+api_key = ""
 blog = "https://mackow.ski/"
 
 [middlewares.session.store]
