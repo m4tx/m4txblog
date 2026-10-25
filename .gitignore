@@ -27,3 +27,6 @@ syntax-highlighting/defs.bin
 # Configuration files
 config/prod.toml
 config/custom.toml
+
+# Cot related auto generated files
+.cot/
