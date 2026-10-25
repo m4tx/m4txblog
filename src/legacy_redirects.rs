@@ -7,9 +7,8 @@
 //! database by `scripts/generate_legacy_redirects.py`.
 //!
 //! Requests whose `Host` is one of the configured legacy hosts are always
-//! redirected to the new domain: either to the new location of the
-//! post/page, or to the same path if there's no known equivalent (which then
-//! typically results in a 404 on the new domain).
+//! redirected to the new domain: either to the new location of the post, or
+//! to the same path for anything that isn't a post URL.
 
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
@@ -17,15 +16,13 @@ use std::sync::{Arc, LazyLock};
 use cot::http::header::{HOST, LOCATION};
 use cot::middleware::Next;
 use cot::project::MiddlewareContext;
-use cot::request::{Request, RequestExt};
+use cot::request::Request;
 use cot::response::{Response, ResponseExt};
 use cot::{Body, StatusCode};
 use percent_encoding::percent_decode_str;
 use serde::Deserialize;
 
 use crate::posts::get_post_map;
-
-const APP_NAME: &str = "m4txblog";
 
 /// The `[legacy_redirects]` section of the project config.
 #[derive(Debug, Clone, Deserialize)]
@@ -84,19 +81,12 @@ pub async fn redirect_legacy(
         return next.run(request).await;
     }
 
-    let target = resolve(request.uri().path(), request.uri().query());
-    let path = match target {
-        Target::Gone => {
-            return Ok(Response::builder()
-                .status(StatusCode::GONE)
-                .body(Body::empty())
-                .expect("valid response"));
-        }
-        Target::SamePath => request
+    let path = match resolve(request.uri().path()) {
+        Some(post) => post_path(&request, &post)?,
+        None => request
             .uri()
             .path_and_query()
             .map_or_else(|| "/".to_owned(), ToString::to_string),
-        target => target_path(&request, &target)?,
     };
 
     Ok(Response::builder()
@@ -127,81 +117,39 @@ impl Site {
 #[derive(Debug, Deserialize)]
 struct LegacyData {
     post: Vec<LegacyPost>,
-    page: Vec<LegacyPage>,
 }
 
 #[derive(Debug, Deserialize)]
 struct LegacyPost {
     site: Site,
-    wp_id: u64,
     slug: String,
     permalink: String,
     language: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct LegacyPage {
-    site: Site,
-    wp_id: u64,
-    path: String,
-    route: String,
+/// A blog post in the given language.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct PostTarget {
+    permalink: String,
+    language: String,
 }
 
-#[derive(Debug)]
-struct LegacyIndex {
-    posts_by_slug: HashMap<(Site, String), Target>,
-    posts_by_id: HashMap<(Site, u64), Target>,
-    pages_by_path: HashMap<(Site, String), Target>,
-    pages_by_id: HashMap<(Site, u64), Target>,
-}
-
-static LEGACY_INDEX: LazyLock<LegacyIndex> = LazyLock::new(|| {
+/// The new posts, keyed by the site and the slug of the old post.
+static LEGACY_POSTS: LazyLock<HashMap<(Site, String), PostTarget>> = LazyLock::new(|| {
     let data: LegacyData = toml::from_str(include_str!("../legacy_redirects.toml"))
         .expect("invalid legacy_redirects.toml");
 
-    let mut index = LegacyIndex {
-        posts_by_slug: HashMap::new(),
-        posts_by_id: HashMap::new(),
-        pages_by_path: HashMap::new(),
-        pages_by_id: HashMap::new(),
-    };
-    for post in data.post {
-        let target = Target::Post {
-            permalink: post.permalink,
-            language: post.language,
-        };
-        index
-            .posts_by_slug
-            .insert((post.site, normalize(&post.slug)), target.clone());
-        index.posts_by_id.insert((post.site, post.wp_id), target);
-    }
-    for page in data.page {
-        let target = Target::Route(page.route);
-        index
-            .pages_by_path
-            .insert((page.site, normalize(&page.path)), target.clone());
-        index.pages_by_id.insert((page.site, page.wp_id), target);
-    }
-    index
+    data.post
+        .into_iter()
+        .map(|post| {
+            let target = PostTarget {
+                permalink: post.permalink,
+                language: post.language,
+            };
+            ((post.site, normalize(&post.slug)), target)
+        })
+        .collect()
 });
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum Target {
-    /// A blog post in the given language.
-    Post { permalink: String, language: String },
-    /// A named route of the blog app (with no parameters).
-    Route(String),
-    /// The same path on the new domain.
-    SamePath,
-    /// WordPress-specific endpoints that don't make sense anymore.
-    Gone,
-}
-
-impl Target {
-    fn route(name: &str) -> Self {
-        Self::Route(name.to_owned())
-    }
-}
 
 /// Percent-decodes and lowercases a path (WordPress slugs are lowercase, but
 /// percent-encoded characters can be in either case).
@@ -220,120 +168,48 @@ fn is_month(segment: &str) -> bool {
     segment.len() == 2 && segment.bytes().all(|b| b.is_ascii_digit())
 }
 
-fn query_param<'a>(query: Option<&'a str>, name: &str) -> Option<&'a str> {
-    query?
-        .split('&')
-        .filter_map(|pair| pair.split_once('=').or(Some((pair, ""))))
-        .find(|(key, _)| *key == name)
-        .map(|(_, value)| value)
-}
-
-/// Finds out where an old URL should be redirected to.
-fn resolve(path: &str, query: Option<&str>) -> Target {
-    let index = &*LEGACY_INDEX;
-
+/// Finds the post an old post URL should be redirected to.
+///
+/// Returns `None` if the path isn't a known post URL.
+fn resolve(path: &str) -> Option<PostTarget> {
     let normalized = normalize(path);
-    let (site, rest) = match normalized.strip_prefix("en") {
-        Some(rest) if rest.is_empty() || rest.starts_with('/') => {
-            (Site::En, rest.trim_start_matches('/'))
-        }
-        _ => (Site::Pl, normalized.as_str()),
-    };
-    let segments: Vec<&str> = rest.split('/').filter(|s| !s.is_empty()).collect();
-
-    // `/?p=123`, `/?page_id=123`, `/?feed=rss2`
-    if segments.is_empty() {
-        let id = |name| query_param(query, name).and_then(|id| id.parse::<u64>().ok());
-        if let Some(target) = id("p").and_then(|id| index.posts_by_id.get(&(site, id))) {
-            return target.clone();
-        }
-        if let Some(target) = id("page_id").and_then(|id| index.pages_by_id.get(&(site, id))) {
-            return target.clone();
-        }
-        if query_param(query, "feed").is_some() {
-            return Target::route("feed");
-        }
-        return Target::route("index");
-    }
+    let segments: Vec<&str> = normalized.split('/').filter(|s| !s.is_empty()).collect();
 
     // Posts are matched by slug only; any trailing segments (`feed/`,
     // `comment-page-2/`, `amp/`, ...) are ignored
-    let post_slug = match (site, segments.as_slice()) {
-        (Site::Pl, ["blog", year, month, slug, ..]) | (Site::En, [year, month, slug, ..])
-            if is_year(year) && is_month(month) =>
-        {
-            Some(*slug)
-        }
-        _ => None,
+    let (site, slug) = match segments.as_slice() {
+        ["blog", year, month, slug, ..] if is_year(year) && is_month(month) => (Site::Pl, *slug),
+        ["en", year, month, slug, ..] if is_year(year) && is_month(month) => (Site::En, *slug),
+        _ => return None,
     };
-    if let Some(slug) = post_slug {
-        if let Some(target) = index.posts_by_slug.get(&(site, slug.to_owned())) {
-            return target.clone();
-        }
-        // Someone might have guessed the URL using the new slug
-        let language = site.language();
-        let has_post = get_post_map()
-            .get(slug)
-            .is_some_and(|posts| posts.iter().any(|post| post.language == language));
-        return if has_post {
-            Target::Post {
-                permalink: slug.to_owned(),
-                language: language.to_owned(),
-            }
-        } else {
-            Target::SamePath
-        };
+    if let Some(target) = LEGACY_POSTS.get(&(site, slug.to_owned())) {
+        return Some(target.clone());
     }
 
-    match (site, segments.as_slice()) {
-        (_, ["feed", ..] | ["comments", "feed", ..]) | (Site::Pl, ["blog", "feed", ..]) => {
-            Target::route("feed")
-        }
-        (Site::Pl, ["blog"]) => Target::route("index"),
-        (Site::Pl, ["blog", "kategorie" | "tagi" | "page", ..])
-        | (Site::En, ["category" | "tag", ..])
-        | (_, ["author" | "page", ..]) => Target::route("archive"),
-        (Site::Pl, ["blog", year] | ["blog", year, _]) | (Site::En, [year] | [year, _])
-            if is_year(year) =>
-        {
-            Target::route("archive")
-        }
-        (_, ["wp-admin" | "wp-includes" | "wp-json", ..])
-        | (_, ["wp-login.php" | "xmlrpc.php" | "wp-cron.php" | "wp-signup.php"]) => Target::Gone,
-        _ => index
-            .pages_by_path
-            .get(&(site, segments.join("/")))
-            .cloned()
-            .unwrap_or(Target::SamePath),
-    }
+    // Someone might have guessed the URL using the new slug
+    let language = site.language();
+    let has_post = get_post_map()
+        .get(slug)
+        .is_some_and(|posts| posts.iter().any(|post| post.language == language));
+    has_post.then(|| PostTarget {
+        permalink: slug.to_owned(),
+        language: language.to_owned(),
+    })
 }
 
-fn target_path(request: &Request, target: &Target) -> cot::Result<String> {
-    let path = match target {
-        Target::Post {
-            permalink,
-            language,
-        } => {
-            let is_default_language = get_post_map()
-                .get(permalink)
-                .is_some_and(|posts| posts[0].language == *language);
-            if is_default_language {
-                cot::reverse!(request, "m4txblog:post", page = permalink)?
-            } else {
-                cot::reverse!(
-                    request,
-                    "m4txblog:post_with_lang",
-                    page = permalink,
-                    lang = language
-                )?
-            }
-        }
-        Target::Route(name) => {
-            request
-                .router()
-                .reverse(Some(APP_NAME), name, &cot::reverse_param_map!())?
-        }
-        Target::SamePath | Target::Gone => unreachable!("handled by the caller"),
+fn post_path(request: &Request, post: &PostTarget) -> cot::Result<String> {
+    let is_default_language = get_post_map()
+        .get(&post.permalink)
+        .is_some_and(|posts| posts[0].language == post.language);
+    let path = if is_default_language {
+        cot::reverse!(request, "m4txblog:post", page = post.permalink)?
+    } else {
+        cot::reverse!(
+            request,
+            "m4txblog:post_with_lang",
+            page = post.permalink,
+            lang = post.language
+        )?
     };
     Ok(path)
 }
@@ -342,24 +218,21 @@ fn target_path(request: &Request, target: &Target) -> cot::Result<String> {
 mod tests {
     use super::*;
 
-    fn post(permalink: &str, language: &str) -> Target {
-        Target::Post {
+    fn post(permalink: &str, language: &str) -> Option<PostTarget> {
+        Some(PostTarget {
             permalink: permalink.to_owned(),
             language: language.to_owned(),
-        }
+        })
     }
 
     #[test]
     fn every_post_target_exists() {
         let post_map = get_post_map();
-        for target in LEGACY_INDEX.posts_by_id.values() {
-            let Target::Post {
-                permalink,
-                language,
-            } = target
-            else {
-                panic!("unexpected target {target:?}");
-            };
+        for PostTarget {
+            permalink,
+            language,
+        } in LEGACY_POSTS.values()
+        {
             let posts = post_map
                 .get(permalink)
                 .unwrap_or_else(|| panic!("no post with permalink {permalink:?}"));
@@ -368,36 +241,35 @@ mod tests {
                 "no {language:?} version of {permalink:?}"
             );
         }
-        assert_eq!(LEGACY_INDEX.posts_by_id.len(), 102);
+        assert_eq!(LEGACY_POSTS.len(), 102);
     }
 
     #[test]
     fn polish_posts() {
         assert_eq!(
-            resolve("/blog/2011/08/kurs-gtk-rozdzial-10/", None),
+            resolve("/blog/2011/08/kurs-gtk-rozdzial-10/"),
             post("kurs-gtk-rozdzial-10", "pl"),
             "the new slug should work, too"
         );
         assert_eq!(
-            resolve("/blog/2011/08/kurs-gtk-%e2%80%93-rozdzial-10/", None),
+            resolve("/blog/2011/08/kurs-gtk-%e2%80%93-rozdzial-10/"),
             post("kurs-gtk-rozdzial-10", "pl")
         );
         assert_eq!(
-            resolve("/blog/2011/08/kurs-gtk-%E2%80%93-rozdzial-10", None),
+            resolve("/blog/2011/08/kurs-gtk-%E2%80%93-rozdzial-10"),
             post("kurs-gtk-rozdzial-10", "pl")
         );
         assert_eq!(
-            resolve("/blog/2011/08/kurs-gtk-–-rozdzial-10/comment-page-1/", None),
+            resolve("/blog/2011/08/kurs-gtk-–-rozdzial-10/comment-page-1/"),
             post("kurs-gtk-rozdzial-10", "pl")
         );
         assert_eq!(
-            resolve("/blog/2010/09/nigdy-wiecej-gadu-gadu/", None),
+            resolve("/blog/2010/09/nigdy-wiecej-gadu-gadu/"),
             post("nigdy-wiecej-gadu-gadu", "pl")
         );
         assert_eq!(
             resolve(
-                "/blog/2013/01/java-konwersja-obrazkow-swt-na-awt-i-vice-versa-z-przezroczystoscia/",
-                None
+                "/blog/2013/01/java-konwersja-obrazkow-swt-na-awt-i-vice-versa-z-przezroczystoscia/"
             ),
             post(
                 "java-swt-to-awt-and-vice-versa-image-conversion-with-transparency-support",
@@ -405,84 +277,47 @@ mod tests {
             )
         );
         assert_eq!(
-            resolve("/blog/2012/02/duplicate-lines-finder-2-0/", None),
+            resolve("/blog/2012/02/duplicate-lines-finder-2-0/"),
             post("new-application-duplicate-lines-finder-2-0", "pl")
-        );
-        assert_eq!(
-            resolve("/", Some("p=305")),
-            post("nigdy-wiecej-gadu-gadu", "pl")
         );
     }
 
     #[test]
     fn english_posts() {
         assert_eq!(
-            resolve("/en/2011/02/hello-world/", None),
+            resolve("/en/2011/02/hello-world/"),
             post("hello-world-2", "en")
         );
         assert_eq!(
             resolve(
-                "/en/2013/01/java-swt-to-awt-and-vice-versa-image-conversion-with-transparency-support/",
-                None
+                "/en/2013/01/java-swt-to-awt-and-vice-versa-image-conversion-with-transparency-support/"
             ),
             post(
                 "java-swt-to-awt-and-vice-versa-image-conversion-with-transparency-support",
                 "en"
             )
         );
-        assert_eq!(resolve("/en/", Some("p=11")), post("hello-world-2", "en"));
         // This one only exists in the Polish blog
-        assert_eq!(
-            resolve("/en/2010/09/nigdy-wiecej-gadu-gadu/", None),
-            Target::SamePath
-        );
+        assert_eq!(resolve("/en/2010/09/nigdy-wiecej-gadu-gadu/"), None);
     }
 
     #[test]
-    fn pages() {
-        assert_eq!(resolve("/o-mnie/", None), Target::route("about"));
-        assert_eq!(resolve("/en/about-me/", None), Target::route("about"));
-        assert_eq!(resolve("/cookies/", None), Target::route("privacy"));
-        assert_eq!(resolve("/", Some("page_id=2")), Target::route("about"));
-        assert_eq!(
-            resolve("/en/go-to-m4txblog-in-polish/", None),
-            Target::route("index")
-        );
-        // Old app pages don't have an equivalent
-        assert_eq!(
-            resolve("/aplikacje-i-gry/komputerowe/smsprice/", None),
-            Target::SamePath
-        );
-    }
-
-    #[test]
-    fn listings_and_feeds() {
-        assert_eq!(resolve("/", None), Target::route("index"));
-        assert_eq!(resolve("/en/", None), Target::route("index"));
-        assert_eq!(resolve("/en", None), Target::route("index"));
-        assert_eq!(resolve("/blog/", None), Target::route("index"));
-        assert_eq!(resolve("/feed/", None), Target::route("feed"));
-        assert_eq!(resolve("/feed/atom/", None), Target::route("feed"));
-        assert_eq!(resolve("/en/feed/", None), Target::route("feed"));
-        assert_eq!(resolve("/comments/feed/", None), Target::route("feed"));
-        assert_eq!(resolve("/", Some("feed=rss2")), Target::route("feed"));
-        assert_eq!(
-            resolve("/blog/kategorie/kurs-gtkplus/", None),
-            Target::route("archive")
-        );
-        assert_eq!(resolve("/blog/tagi/java/", None), Target::route("archive"));
-        assert_eq!(resolve("/en/tag/java/", None), Target::route("archive"));
-        assert_eq!(resolve("/blog/2011/", None), Target::route("archive"));
-        assert_eq!(resolve("/blog/2011/07/", None), Target::route("archive"));
-        assert_eq!(resolve("/en/2013/01/", None), Target::route("archive"));
-        assert_eq!(resolve("/page/3/", None), Target::route("archive"));
-    }
-
-    #[test]
-    fn wordpress_endpoints() {
-        assert_eq!(resolve("/wp-login.php", None), Target::Gone);
-        assert_eq!(resolve("/xmlrpc.php", None), Target::Gone);
-        assert_eq!(resolve("/wp-admin/edit.php", None), Target::Gone);
-        assert_eq!(resolve("/en/wp-admin/", None), Target::Gone);
+    fn other_urls() {
+        for path in [
+            "/",
+            "/en/",
+            "/blog/",
+            "/feed/",
+            "/o-mnie/",
+            "/blog/kategorie/kurs-gtkplus/",
+            "/blog/tagi/java/",
+            "/blog/2011/07/",
+            "/blog/2099/01/missing/",
+            "/wp-login.php",
+            "/wp-admin/edit.php",
+            "/wp-content/uploads/2011/03/amarok_screen.jpeg",
+        ] {
+            assert_eq!(resolve(path), None, "{path}");
+        }
     }
 }

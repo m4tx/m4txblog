@@ -3,8 +3,8 @@
 
 The old blog was a WordPress multisite at m4tx.pl: the Polish site (blog 1)
 was served at `/` and the English one (blog 3) at `/en/`. This script maps
-every published post (and a handful of pages) to their new
-locations, so that the server can redirect the old URLs.
+every published post to its new location, so that the server can redirect
+the old URLs.
 
 Posts are matched with the Markdown files in `src/md-pages/` by language and
 publication date, which is stable even when the slug has changed.
@@ -30,18 +30,6 @@ MD_PAGES_DIR = REPO_ROOT / "src" / "md-pages"
 
 # (site code, table prefix, language of the posts)
 SITES = [("pl", "wp_", "pl"), ("en", "wp_3_", "en")]
-
-# Pages that still have an equivalent on the new blog, mapped to route names.
-# Everything else (e.g. the old app pages) is intentionally left out and
-# results in a 404.
-PAGE_ROUTES = {
-    ("pl", "o-mnie"): "about",
-    ("pl", "cookies"): "privacy",
-    ("en", "about-me"): "about",
-    ("en", "cookies"): "privacy",
-    ("en", "go-to-m4txblog-in-polish"): "index",
-}
-
 
 def connect():
     return pymysql.connect(
@@ -78,7 +66,7 @@ def main():
     md_pages = read_md_pages()
     cursor = connect().cursor()
 
-    posts, pages = [], []
+    posts = []
     errors = []
 
     for site, prefix, language in SITES:
@@ -96,25 +84,9 @@ def main():
             if permalink is None:
                 errors.append(f"no Markdown file for {site} post {wp_id} {slug!r}")
                 continue
-            posts.append((site, wp_id, unquote(slug), permalink, language))
+            posts.append((site, unquote(slug), permalink, language))
 
-        cursor.execute(
-            f"SELECT ID, post_name, post_parent FROM {prefix}posts "
-            "WHERE post_type = 'page' AND post_status = 'publish'"
-        )
-        all_pages = {wp_id: (slug, parent) for wp_id, slug, parent in cursor.fetchall()}
-        for wp_id, (slug, _) in sorted(all_pages.items()):
-            route = PAGE_ROUTES.get((site, slug))
-            if route is None:
-                continue
-            path_parts = []
-            current = wp_id
-            while current:
-                current_slug, current = all_pages[current]
-                path_parts.insert(0, current_slug)
-            pages.append((site, wp_id, "/".join(path_parts), route))
-
-    slugs = [(site, slug) for site, _, slug, _, _ in posts]
+    slugs = [(site, slug) for site, slug, _, _ in posts]
     if len(slugs) != len(set(slugs)):
         errors.append("duplicate post slugs")
 
@@ -130,30 +102,17 @@ def main():
         '# `site` is "pl" for the Polish blog (served at `/`) or "en" for the English',
         "# one (served at `/en/`).",
     ]
-    for site, wp_id, slug, permalink, language in posts:
+    for site, slug, permalink, language in posts:
         out += [
             "",
             "[[post]]",
             f"site = {toml_str(site)}",
-            f"wp_id = {wp_id}",
             f"slug = {toml_str(slug)}",
             f"permalink = {toml_str(permalink)}",
             f"language = {toml_str(language)}",
         ]
-    for site, wp_id, path, route in pages:
-        out += [
-            "",
-            "[[page]]",
-            f"site = {toml_str(site)}",
-            f"wp_id = {wp_id}",
-            f"path = {toml_str(path)}",
-            f"route = {toml_str(route)}",
-        ]
     print("\n".join(out))
-    print(
-        f"{len(posts)} posts, {len(pages)} pages",
-        file=sys.stderr,
-    )
+    print(f"{len(posts)} posts", file=sys.stderr)
 
 
 if __name__ == "__main__":
