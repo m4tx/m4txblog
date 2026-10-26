@@ -100,7 +100,7 @@ article {
 }
 
 .navbar {
-  font-family: "Fira Sans", serif;
+  font-family: "Fira Sans", sans-serif;
 }
 
 @include media-breakpoint-up(lg) {
@@ -137,16 +137,38 @@ article {
   // Allow the code blocks inside guide to overflow
   min-width: 0;
 
+  // Comfortable line length (~70-75 characters) for the post text
+  > * {
+    max-width: 42rem;
+  }
+
+  > pre, > figure, > table, > .comments {
+    max-width: none;
+  }
+
+  // Kept separate so that browsers without `:has()` don't drop the rule above
+  > p:has(> img, > a > img) {
+    max-width: none;
+  }
+
   p, ul, ol, table {
     font-family: $font-family-serif;
+    font-size: 1.125rem;
+    line-height: 1.6;
   }
 
-  h2 {
-    margin-top: 2rem;
+  > h2 {
+    margin-top: 2.5rem;
   }
 
-  code {
-    white-space: pre;
+  > h3 {
+    margin-top: 1.75rem;
+    font-size: 1.5rem;
+  }
+
+  > h4 {
+    margin-top: 1.5rem;
+    font-size: 1.25rem;
   }
 
   img {
@@ -158,7 +180,7 @@ article {
   margin-left: calc(-0.6em - .9rem);
   padding: 0 .5rem;
   font-weight: 400;
-  color: $primary;
+  color: var(--bs-link-color);
   text-decoration: none;
   opacity: 0;
 
@@ -227,7 +249,8 @@ figure {
   margin: 1.5rem 0;
 }
 
-.comment {
+// Scoped to the comment list, as syntax highlighting also emits `.comment` spans
+.comment-list > .comment {
   padding: .75rem 0;
   border-top: 1px solid var(--bs-border-color);
 
