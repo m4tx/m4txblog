@@ -10,6 +10,9 @@
 {%- endblock head %}
 {% block content %}
     <div class="container px-4 py-5">
+        <p class="home-intro">
+            Hi, I’m Mateusz. I write about Rust, web development, and <a href="https://cot.rs">Cot</a>, the web framework I maintain. More <a href="{{ cot::reverse!(urls, "about")? }}">about me</a>.
+        </p>
         {%- include "_post_list.html" -%}
         <div class="text-center mt-5">
             <a href="{{ cot::reverse!(urls, "archive")? }}"

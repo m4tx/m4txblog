@@ -1,9 +1,26 @@
-{%- for post_list in posts.values() -%}
-    {%- let post = &post_list[0] -%}
+{%- for entry in posts -%}
+    {%- match entry -%}
+    {%- when PostListEntry::Local(post) -%}
     <article class="blog-post">
         <h2>
             <a href="{{ cot::reverse!(urls, "post", page = post.link)? }}">{{ post.title }}</a>
         </h2>
         <p class="blog-post-meta">{{ post.date.format("%d %B %Y") }}</p>
     </article>
+    {%- when PostListEntry::External(post) -%}
+    <article class="blog-post">
+        {%- let (title_head, title_last_word) = template_util::split_last_word(post.title) -%}
+        <h2>
+            <a href="{{ post.url }}">{{ title_head }}<span class="text-nowrap">{{ title_last_word }}
+                <svg class="bi external-link-icon" aria-hidden="true">
+                    <use href="#box-arrow-up-right"></use>
+                </svg>
+            </span></a>
+        </h2>
+        <p class="blog-post-meta">
+            <span class="badge border text-body-secondary">guest post</span>
+            {{ post.date.format("%d %B %Y") }} · on {{ post.site }}
+        </p>
+    </article>
+{%- endmatch -%}
 {%- endfor %}

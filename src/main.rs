@@ -34,7 +34,6 @@ use cot::router::{Route, Router, Urls, method};
 use cot::session::db::SessionApp;
 use cot::static_files::{StaticFile, StaticFilesMiddleware};
 use cot::{AppBuilder, Body, Bootstrapper, StatusCode, Template, static_files};
-use indexmap::IndexMap;
 use m4txblog_common::md_pages::MdPage;
 use m4txblog_macros::{md_page, static_files_dir};
 use serde::Deserialize;
@@ -47,7 +46,7 @@ use crate::comments::{
 };
 use crate::feed::blog_feed;
 use crate::legacy_redirects::{LegacyRedirectsConfig, redirect_legacy};
-use crate::posts::{get_archived_post_map, get_post_map, get_unarchived_post_map};
+use crate::posts::{PostListEntry, get_archive_entries, get_homepage_entries, get_post_map};
 
 #[derive(Debug, Clone, FromRequestHead)]
 struct BaseContext {
@@ -75,12 +74,12 @@ impl PartialEq<str> for RouteName {
 #[derive(Debug, Template)]
 #[template(path = "index.html")]
 struct IndexTemplate<'a> {
-    posts: &'a IndexMap<String, Vec<MdPage>>,
+    posts: Vec<PostListEntry<'static>>,
     base_context: &'a BaseContext,
 }
 
 async fn index(base_context: BaseContext) -> cot::Result<Html> {
-    let posts = get_unarchived_post_map();
+    let posts = get_homepage_entries();
 
     let index_template = IndexTemplate {
         posts,
@@ -93,12 +92,12 @@ async fn index(base_context: BaseContext) -> cot::Result<Html> {
 #[derive(Debug, Template)]
 #[template(path = "archive.html")]
 struct ArchiveTemplate<'a> {
-    posts: &'a IndexMap<String, Vec<MdPage>>,
+    posts: Vec<PostListEntry<'static>>,
     base_context: &'a BaseContext,
 }
 
 async fn archive(base_context: BaseContext) -> cot::Result<Html> {
-    let posts = get_archived_post_map();
+    let posts = get_archive_entries();
 
     let archive_template = ArchiveTemplate {
         posts,
