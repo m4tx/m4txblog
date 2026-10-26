@@ -11,7 +11,7 @@
                     <time datetime="{{ post.date.to_rfc3339() }}" class="blog-post-meta">{{ post.date.format("%d %B %Y") }}</time>
                 </header>
                 {%- if post.is_archived() -%}
-                    <div class="alert alert-danger" role="alert">
+                    <div class="alert alert-warning" role="alert">
                         {%- if post.language == "pl" -%}
                             <h4 class="alert-heading">
                                 {% include "icons/warning.svg" %}
