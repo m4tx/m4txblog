@@ -13,7 +13,7 @@ Currently working at Google as a Software Engineer in the Pixel Core Platform Te
 ## Projects
 
 * [Cot](https://cot.rs), the Rust web framework for lazy developers.
-* [Tundra](https://github.com/m4tx/tundra), a MyAnimeList scrobbler for Linux.
+* [Tundra](https://tundra.moe), a MyAnimeList scrobbler for Linux.
 * [dtoolkit](https://github.com/google/dtoolkit), a Rust library for parsing and manipulating Flattened Device Tree (FDT) blobs.
 
 ## Talks
