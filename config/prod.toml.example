@@ -1,7 +1,7 @@
 secret_key = ""  # Set this to a random hex string in production
 
 [database]
-url = "sqlite://db.sqlite3?mode=rwc"
+url = "sqlite:///app/data/db.sqlite3?mode=rwc"
 # Or:
 # url = "postgres://user:password@localhost:5432/database"
 # url = "mysql://user:password@localhost:3306/database"
@@ -13,3 +13,23 @@ type = "database"
 url = "/"
 rewrite = "query_param"
 cache_timeout = "1year"
+
+[legacy_redirects]
+hosts = ["m4tx.pl", "www.m4tx.pl"]
+target = "https://mackow.ski"
+
+[akismet]
+api_key = ""
+blog = "https://mackow.ski/"
+
+[middlewares.session.store]
+type = "database"
+
+[email.transport]
+type = "smtp"
+url = "smtp://user:password@smtp.example.com:587"
+mechanism = "plain"
+
+[comment_notifications]
+from = "blog@mackow.ski"
+to = "mateusz@mackowski.org"

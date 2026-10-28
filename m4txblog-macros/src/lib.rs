@@ -1,4 +1,4 @@
-#![cfg_attr(nightly, feature(proc_macro_tracked_path, proc_macro_hygiene))]
+#![cfg_attr(nightly, feature(proc_macro_tracked_path))]
 
 use proc_macro::TokenStream;
 

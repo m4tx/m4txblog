@@ -1,5 +1,6 @@
 use std::sync::LazyLock;
 
+use chrono::NaiveDate;
 use indexmap::IndexMap;
 use m4txblog_common::md_pages::MdPage;
 use m4txblog_macros::md_page;
@@ -10,6 +11,7 @@ static POSTS: LazyLock<IndexMap<String, Vec<MdPage>>> = LazyLock::new(|| {
         md_page!("2030-01-01-introducing-dtoolkit"),
         md_page!("2030-01-01-monitor-fans-replacement"),
         md_page!("2030-01-01-driving-in-the-uk-is-fun"),
+        md_page!("2026-07-12-cot-v07-lazily-thorough"),
         md_page!("2026-03-18-cot-v06-lazy-underneath"),
         md_page!("2026-01-21-cot-v05-lazy-features"),
         md_page!("2025-09-11-cot-v04-particularly-lazy"),
@@ -157,6 +159,65 @@ pub fn get_unarchived_post_map() -> &'static IndexMap<String, Vec<MdPage>> {
     &UNARCHIVED_POSTS
 }
 
-pub fn get_archived_post_map() -> &'static IndexMap<String, Vec<MdPage>> {
-    &ARCHIVED_POSTS
+/// A post published on another website, listed alongside the local posts.
+#[derive(Debug)]
+pub struct ExternalPost {
+    pub title: &'static str,
+    pub url: &'static str,
+    pub date: NaiveDate,
+    pub site: &'static str,
+}
+
+const fn date(year: i32, month: u32, day: u32) -> NaiveDate {
+    NaiveDate::from_ymd_opt(year, month, day).expect("valid date")
+}
+
+static EXTERNAL_POSTS: [ExternalPost; 2] = [
+    ExternalPost {
+        title: "Rewriting in Rust: Performance, Failures, 2026 Reality Check",
+        url: "https://blog.jetbrains.com/rust/2026/08/10/rewriting-in-rust/",
+        date: date(2026, 8, 10),
+        site: "the JetBrains Rust blog",
+    },
+    ExternalPost {
+        title: "Rust Web Development 2026: The Problems Nobody Talks About",
+        url: "https://blog.jetbrains.com/rust/2026/06/25/rust-web-development-2026/",
+        date: date(2026, 6, 25),
+        site: "the JetBrains Rust blog",
+    },
+];
+
+#[derive(Debug)]
+pub enum PostListEntry<'a> {
+    Local(&'a MdPage),
+    External(&'a ExternalPost),
+}
+
+impl PostListEntry<'_> {
+    fn date(&self) -> NaiveDate {
+        match self {
+            Self::Local(post) => post.date.date_naive(),
+            Self::External(post) => post.date,
+        }
+    }
+}
+
+fn local_entries(posts: &IndexMap<String, Vec<MdPage>>) -> impl Iterator<Item = PostListEntry<'_>> {
+    posts
+        .values()
+        .map(|post_list| PostListEntry::Local(&post_list[0]))
+}
+
+/// Returns the unarchived posts merged with the external posts, newest first.
+pub fn get_homepage_entries() -> Vec<PostListEntry<'static>> {
+    let mut entries: Vec<_> = local_entries(&UNARCHIVED_POSTS)
+        .chain(EXTERNAL_POSTS.iter().map(PostListEntry::External))
+        .collect();
+    // stable sort, so the posts published on the same day keep their order
+    entries.sort_by_key(|entry| std::cmp::Reverse(entry.date()));
+    entries
+}
+
+pub fn get_archive_entries() -> Vec<PostListEntry<'static>> {
+    local_entries(&ARCHIVED_POSTS).collect()
 }

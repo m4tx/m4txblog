@@ -1,46 +1,214 @@
-{%- if post.accepts_comments() -%}
-    <section>
+{%- let post = post -%}
+{%- let comments_open = post.comments_open() -%}
+{%- if comments_open || !comments.is_empty() || post.has_discussion_links() -%}
+    <section id="comments" class="comments">
         <hr>
         <h2>Comments</h2>
-        Discuss this post on:
-        <ul>
-            {%- if let Some(reddit_link) = post.reddit_link -%}
-                <li>
-                    <a href="{{ reddit_link }}">
-                        {% include "icons/reddit.svg" %}
-                        Reddit
-                    </a>
-                </li>
+        {%- if post.has_discussion_links() -%}
+            <p class="mb-1">Discuss this post on:</p>
+            <ul>
+                {%- if let Some(reddit_link) = post.reddit_link -%}
+                    <li>
+                        <a href="{{ reddit_link }}">
+                            {% include "icons/reddit.svg" %}
+                            Reddit
+                        </a>
+                    </li>
+                {%- endif -%}
+                {%- if let Some(hackernews_link) = post.hackernews_link -%}
+                    <li>
+                        <a href="{{ hackernews_link }}">
+                            {% include "icons/hackernews.svg" %}
+                            Hacker News
+                        </a>
+                    </li>
+                {%- endif -%}
+            </ul>
+            {%- if comments_open -%}
+                <p>or leave a comment below.</p>
             {%- endif -%}
-            {%- if let Some(hackernews_link) = post.hackernews_link -%}
-                <li>
-                    <a href="{{ hackernews_link }}">
-                        {% include "icons/hackernews.svg" %}
-                        Hacker News
-                    </a>
-                </li>
-            {%- endif -%}
-            {% if false %}<li>this website:</li>{% endif %}
-        </ul>
-        {%- if false -%}
-            <form action="" method="post">
-                <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1">@</span>
-                    <input type="text"
-                           class="form-control"
-                           placeholder="Username"
-                           aria-label="Username"
-                           aria-describedby="basic-addon1">
-                </div>
-                <textarea class="form-control" aria-label="With textarea" placeholder="Comment"></textarea>
-                <p>
-                    You may use <a href="https://commonmark.org/help/">Markdown</a> in your comment.
-                </p>
-                <p>
-                    This site uses Akismet to reduce spam. <a href="https://akismet.com/privacy/">Learn how your comment data is processed.</a>
-                </p>
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </form>
         {%- endif -%}
-    </section>
-{%- endif -%}
+        {%- if comment_pending -%}
+            <div class="alert alert-success" role="status">Thank you! Your comment is awaiting moderation.</div>
+        {%- endif -%}
+        {%- if comments.is_empty() -%}
+            {%- if comments_open -%}
+                <p class="text-body-secondary">There are no comments yet.</p>
+            {%- endif -%}
+        {%- else -%}
+            <ol class="comment-list list-unstyled">
+                {%- for comment in comments -%}
+                    <li id="comment-{{ comment.id }}"
+                        class="comment comment-depth-{{ comment.depth }}">
+                        <div class="comment-meta">
+                            {%- if let Some(author_url) = comment.author_url -%}
+                                <a href="{{ author_url }}"
+                                   class="comment-author"
+                                   rel="nofollow ugc noopener">{{ comment.author_name }}</a>
+                            {%- else -%}
+                                <span class="comment-author">{{ comment.author_name }}</span>
+                            {%- endif -%}
+                            {%- if comment.is_site_owner -%}
+                                <span class="badge text-bg-primary">author</span>
+                            {%- endif -%}
+                            {%- if let Some(parent_author) = comment.in_reply_to -%}
+                                <span class="text-body-secondary">in reply to {{ parent_author }}</span>
+                            {%- endif -%}
+                            <a href="#comment-{{ comment.id }}" class="comment-date blog-post-meta">
+                                <time datetime="{{ comment.created_at.to_rfc3339() }}">{{ comment.created_at.format("%d %B %Y, %H:%M") }}</time>
+                            </a>
+                        </div>
+                        <div class="comment-content">{{ comment.content_html|safe }}</div>
+                        {%- if comments_open -%}
+                            <a href="?replytocom={{ comment.id }}#respond"
+                               class="comment-reply-link"
+                               data-comment-id="{{ comment.id }}"
+                               data-comment-author="{{ comment.author_name }}">Reply</a>
+                        {%- endif -%}
+                    </li>
+                {%- endfor -%}
+            </ol>
+        {%- endif -%}
+        {%- if comments_open -%}
+            <form id="respond"
+                  class="comment-form mt-4"
+                  action="{{ cot::reverse!(urls, "post_comment", page = post.link, lang = post.language)? }}"
+                  method="post">
+                <h3 class="h4">Leave a comment</h3>
+                {%- if comment_form.has_errors() -%}
+                    <div class="alert alert-danger" role="alert">
+                        Please correct the errors below.
+                        {%- for error in comment_form.errors("") %} {{ error }}
+                        {% endfor -%}
+                    </div>
+                {%- endif -%}
+                <div class="comment-reply-to alert alert-secondary py-2"
+                     {% if reply_to.is_none() %}hidden{% endif %}>
+                    Replying to
+                    <strong class="comment-reply-to-author">
+                        {%- if let Some(reply_to) = reply_to -%}{{ reply_to.author_name }}{%- endif -%}
+                        </strong>
+                        · <a href="?#respond" class="comment-cancel-reply">Cancel</a>
+                    </div>
+                    <input type="hidden"
+                           name="parent"
+                           value="{%- if let Some(reply_to) = reply_to -%}{{ reply_to.id }}{%- endif -%}">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label for="comment-author-name" class="form-label">Name</label>
+                            <input type="text"
+                                   id="comment-author-name"
+                                   name="author_name"
+                                   class="form-control{{ comment_form.invalid_class("author_name") }}"
+                                   value="{{ comment_form.value("author_name") }}"
+                                   maxlength="100"
+                                   autocomplete="name"
+                                   required>
+                            {%- for error in comment_form.errors("author_name") -%}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {%- endfor -%}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="comment-author-email" class="form-label">E-mail (optional, never published)</label>
+                            <input type="email"
+                                   id="comment-author-email"
+                                   name="author_email"
+                                   class="form-control{{ comment_form.invalid_class("author_email") }}"
+                                   value="{{ comment_form.value("author_email") }}"
+                                   maxlength="254"
+                                   autocomplete="email">
+                            {%- for error in comment_form.errors("author_email") -%}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {%- endfor -%}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="comment-author-url" class="form-label">Website (optional)</label>
+                            <input type="url"
+                                   id="comment-author-url"
+                                   name="author_url"
+                                   class="form-control{{ comment_form.invalid_class("author_url") }}"
+                                   value="{{ comment_form.value("author_url") }}"
+                                   maxlength="500"
+                                   autocomplete="url"
+                                   placeholder="https://">
+                            {%- for error in comment_form.errors("author_url") -%}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {%- endfor -%}
+                        </div>
+                    </div>
+                    <div class="comment-form-subject" aria-hidden="true">
+                        <label for="comment-subject">Subject</label>
+                        <input type="text"
+                               id="comment-subject"
+                               name="subject"
+                               tabindex="-1"
+                               autocomplete="off">
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment-content" class="form-label">Comment</label>
+                        <textarea id="comment-content"
+                                  name="content"
+                                  class="form-control{{ comment_form.invalid_class("content") }}"
+                                  rows="5"
+                                  maxlength="10000"
+                                  required>{{ comment_form.value("content") }}</textarea>
+                        {%- for error in comment_form.errors("content") -%}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {%- endfor -%}
+                        <div class="form-text">
+                            You may use <a href="https://commonmark.org/help/">Markdown</a>.
+                            Comments with more than one link are held for moderation.
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox"
+                               id="comment-consent"
+                               name="consent"
+                               value="true"
+                               class="form-check-input{{ comment_form.invalid_class("consent") }}"
+                               {% if comment_form.is_checked("consent") %}checked{% endif %}
+                               required>
+                        <label for="comment-consent" class="form-check-label">
+                            I agree to my name, website, and comment being stored and published as described in the <a href="{{ cot::reverse!(urls, "privacy")? }}">privacy policy</a>.
+                        </label>
+                        {%- for error in comment_form.errors("consent") -%}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {%- endfor -%}
+                    </div>
+                    <div class="form-text mb-3">
+                        This site uses Akismet to reduce spam. <a href="https://akismet.com/privacy/">Learn how your comment data is processed.</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+                <script>
+            (() => {
+                const form = document.getElementById("respond");
+                const parent = form.querySelector("input[name=parent]");
+                const replyTo = form.querySelector(".comment-reply-to");
+                const replyToAuthor = form.querySelector(".comment-reply-to-author");
+                const home = document.createComment("respond");
+                form.before(home);
+
+                for (const link of document.querySelectorAll(".comment-reply-link")) {
+                    link.addEventListener("click", (event) => {
+                        event.preventDefault();
+                        parent.value = link.dataset.commentId;
+                        replyToAuthor.textContent = link.dataset.commentAuthor;
+                        replyTo.hidden = false;
+                        link.closest(".comment").append(form);
+                        form.querySelector("textarea").focus();
+                    });
+                }
+                form.querySelector(".comment-cancel-reply").addEventListener("click", (event) => {
+                    event.preventDefault();
+                    parent.value = "";
+                    replyTo.hidden = true;
+                    home.after(form);
+                });
+            })();
+                </script>
+            {%- elif !comments.is_empty() -%}
+                <p class="text-body-secondary">Comments are closed for this post.</p>
+            {%- endif -%}
+        </section>
+    {%- endif -%}
