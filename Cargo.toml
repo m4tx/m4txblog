@@ -14,7 +14,7 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(nightly)'] }
 [workspace.dependencies]
 atom_syndication = "0.12"
 chrono = "0.4"
-comrak = "0.55"
+comrak = "0.59"
 cot = { git = "https://github.com/cot-rs/cot.git", rev = "4ec31eded0948566e423e157dbe9a55eda66be72", default-features = false }
 grass = "0.13"
 indexmap = "2.14"
