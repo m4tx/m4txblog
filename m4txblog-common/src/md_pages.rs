@@ -38,6 +38,21 @@ impl MdPage {
     pub fn has_discussion_links(&self) -> bool {
         self.reddit_link.is_some() || self.hackernews_link.is_some()
     }
+
+    /// Whether the page is long enough to show a table of contents.
+    ///
+    /// The table of contents only contains the top two levels of sections, so
+    /// only these are counted.
+    pub fn has_toc(&self) -> bool {
+        const MIN_TOC_SECTIONS: usize = 3;
+
+        let section_count: usize = self
+            .sections
+            .iter()
+            .map(|section| 1 + section.children.len())
+            .sum();
+        section_count >= MIN_TOC_SECTIONS
+    }
 }
 
 impl From<&MdPage> for MdPageLink {
@@ -110,9 +125,11 @@ impl HeadingAdapter for MdPageHeadingAdapter {
 
         write!(
             output,
-            "<h{} id=\"{}\"><a class=\"anchor-link\" href=\"#{}\" aria-label=\"Link to this section: {}\"></a>",
-            heading.level, anchor, anchor, heading.content
-        )
+            "<h{} id=\"{}\"><a class=\"anchor-link\" href=\"#{}\" aria-label=\"Link to this section: ",
+            heading.level, anchor, anchor
+        )?;
+        comrak::html::escape(output, &heading.content)?;
+        write!(output, "\"></a>")
     }
 
     fn exit(&self, output: &mut dyn Write, heading: &HeadingMeta) -> std::fmt::Result {

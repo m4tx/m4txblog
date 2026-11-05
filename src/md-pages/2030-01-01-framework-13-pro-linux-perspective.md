@@ -12,11 +12,23 @@ Mostly using a desktop PC, laptop for travel, occasional home use, not for comme
 
 ## Is this a "Linux MacBook"?
 
-This really depends on what that means to you exactly, but the answer is somewhere between "it's close" to "it's much better". For a price comparable to a MacBook Pro you get:
+Framework markets this laptop as a "MacBook for Linux", but does this claim really hold up? This really depends on what that means to you exactly, but the answer is somewhere between "it's close" to "it's much better". For a price comparable to a MacBook Pro you get:
 
 * Amazing repairability and upgradability - MacBook's soldered everything (including RAM and even storage nowadays!) is not even in the race.
-* A very solid build quality, a comfortable keyboard and a great touchpad
+* A very solid build quality, arguably a more comfortable keyboard, and a great touchpad.
 * Customization options that no other vendor matches.
+* Great battery life closely following this of MacBook's in most cases. And unlike MacBook, the battery is easy and cheap to replace when it wears out.
+* No fan spinning under light load, and a very quiet noise under load.
+* Amazing looking HiDPI touchscreen display.
+
+To be fair, though:
+
+* MacBook's memory-in-SoC guarantees higher memory throughput making it more usable for running local LLM models.
+* Speakers and webcam which are better on MacBooks.
+
+Finally, there are some aspects that are mostly a matter of preference and what you need your computer for:
+
+* Apple's walled garden vs Windows/Linux choice: Asahi Linux is getting there, but it's still lagging behind new releases of the hardware. While Framework 13 Pro is not a GPU beast, Steam/Proton is so good nowadays you'll be able to play almost any PC game out there even on Linux; on the other hand, there's still a lot of creativity software for macOS with no Linux version (on the other hand, dual-booting to Windows is also an option). This is mostly a matter of preference and prior investment into a particular ecosystem.
 
 # Tweaks I've done
 
@@ -150,3 +162,26 @@ TODO
 ## Various (laptop-related?) settings
 
 Short lock screen time, don't restore session, 
+
+### Speakers
+
+There is a script called [speaker-tuning-to-easyeffects](https://github.com/antoinecellerier/speaker-tuning-to-easyeffects) that can import the Dolby Atmos sound profile from Windows driver and apply it using [EasyEffects](https://easyeffects.org/), or even plug it directly into [PipeWire](https://pipewire.org/) without any external applications.
+
+In my case, I used the latter option to avoid any potential battery drain by having an additional app running always in the background. I'm not planning to alter or disable the filters anyway, so EasyEffects sounds redundant to me.
+
+```bash
+# If you don't have the dependencies already, install them:
+sudo pacman -S curl git python-virtualenv 7zip
+# Download the driver bundle and script
+curl -O https://downloads.frame.work/driver/Framework_Laptop_13_Intel_Core_Ultra_Series3_driver_bundle_W11_v101_2026_06_05.exe
+git clone https://github.com/antoinecellerier/speaker-tuning-to-easyeffects.git
+cd speaker-tuning-to-easyeffects
+# Install the script dependencies in a local Python virtual environment
+python .venv
+source .venv/bin/activate
+pip -r requirements.txt
+# Install the filters
+python dolby_to_pipewire.py ../Framework_Laptop_13_Intel_Core_Ultra_Series3_driver_bundle_W11_v101_2026_06_05.exe
+```
+
+The drivers bundle URL comes directly from the Framework's website - you can verify if there is any newer version available at [resources.frame.work/downloads/laptop-13-pro/](https://resources.frame.work/downloads/laptop-13-pro/).

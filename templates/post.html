@@ -45,6 +45,7 @@
                         {%- endif -%}
                     </div>
                 {%- endfor -%}
+                {%- include "_post_toc.html" -%}
                 {{- post.content_html|safe -}}
                 {%- include "_post_comments.html" -%}
             </article>

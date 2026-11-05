@@ -187,6 +187,37 @@ article {
   }
 }
 
+.post-toc {
+  margin-bottom: 1.5rem;
+  padding: .5rem 1rem;
+  background-color: var(--blockquote-bg);
+  border-left: .4em solid var(--blockquote-border);
+
+  summary {
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  // Overrides the serif post text style from `.blogpost`
+  ul {
+    margin: .5rem 0;
+    padding-left: 0;
+    list-style: none;
+    font-family: $font-family-sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+
+    ul {
+      margin: .15rem 0 0;
+      padding-left: 1.25rem;
+    }
+  }
+
+  li {
+    margin: .15rem 0;
+  }
+}
+
 .anchor-link {
   margin-left: calc(-0.6em - .9rem);
   padding: 0 .5rem;

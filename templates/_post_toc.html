@@ -1,0 +1,29 @@
+{%- if post.has_toc() -%}
+    <details class="post-toc">
+        <summary>
+            {%- if post.language == "pl" -%}
+                Spis treści
+            {%- else -%}
+                Contents
+            {%- endif -%}
+        </summary>
+        <nav>
+            <ul>
+                {%- for section in post.sections -%}
+                    <li>
+                        <a href="#{{ section.anchor }}">{{ section.title }}</a>
+                        {%- if !section.children.is_empty() -%}
+                            <ul>
+                                {%- for child in section.children -%}
+                                    <li>
+                                        <a href="#{{ child.anchor }}">{{ child.title }}</a>
+                                    </li>
+                                {%- endfor -%}
+                            </ul>
+                        {%- endif -%}
+                    </li>
+                {%- endfor -%}
+            </ul>
+        </nav>
+    </details>
+{%- endif -%}
