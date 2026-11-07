@@ -1,0 +1,64 @@
+<svg width="444pt" height="294pt" viewBox="0.00 0.00 444.00 294.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 290)">
+<title>migrations</title>
+<g id="clust1" class="cluster">
+<title>cluster_0</title>
+<path fill="#f9fafb" stroke="#d1d5db" d="M20,-8C20,-8 113.14,-8 113.14,-8 119.14,-8 125.14,-14 125.14,-20 125.14,-20 125.14,-78 125.14,-78 125.14,-84 119.14,-90 113.14,-90 113.14,-90 20,-90 20,-90 14,-90 8,-84 8,-78 8,-78 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="66.57" y="-75.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00" fill="#374151">cot</text>
+</g>
+<g id="clust2" class="cluster">
+<title>cluster_1</title>
+<path fill="#f9fafb" stroke="#d1d5db" d="M20,-98C20,-98 113.14,-98 113.14,-98 119.14,-98 125.14,-104 125.14,-110 125.14,-110 125.14,-168 125.14,-168 125.14,-174 119.14,-180 113.14,-180 113.14,-180 20,-180 20,-180 14,-180 8,-174 8,-168 8,-168 8,-110 8,-110 8,-104 14,-98 20,-98"/>
+<text xml:space="preserve" text-anchor="middle" x="66.57" y="-165.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00" fill="#374151">cot_session</text>
+</g>
+<g id="clust3" class="cluster">
+<title>cluster_2</title>
+<path fill="#f9fafb" stroke="#d1d5db" d="M20,-188C20,-188 415.98,-188 415.98,-188 421.98,-188 427.98,-194 427.98,-200 427.98,-200 427.98,-266 427.98,-266 427.98,-272 421.98,-278 415.98,-278 415.98,-278 20,-278 20,-278 14,-278 8,-272 8,-266 8,-266 8,-200 8,-200 8,-194 14,-188 20,-188"/>
+<text xml:space="preserve" text-anchor="middle" x="217.99" y="-263.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00" fill="#374151">m4txblog</text>
+</g>
+<!-- n0 -->
+<g id="node1" class="node">
+<title>n0</title>
+<path fill="#eef2ff" stroke="#4c51bf" d="M101.14,-56C101.14,-56 32,-56 32,-56 26,-56 20,-50 20,-44 20,-44 20,-32 20,-32 20,-26 26,-20 32,-20 32,-20 101.14,-20 101.14,-20 107.14,-20 113.14,-26 113.14,-32 113.14,-32 113.14,-44 113.14,-44 113.14,-50 107.14,-56 101.14,-56"/>
+<text xml:space="preserve" text-anchor="middle" x="66.57" y="-34.7" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#1e1b4b">m_0001_initial</text>
+</g>
+<!-- n1 -->
+<g id="node2" class="node">
+<title>n1</title>
+<path fill="#eef2ff" stroke="#4c51bf" d="M101.14,-146C101.14,-146 32,-146 32,-146 26,-146 20,-140 20,-134 20,-134 20,-122 20,-122 20,-116 26,-110 32,-110 32,-110 101.14,-110 101.14,-110 107.14,-110 113.14,-116 113.14,-122 113.14,-122 113.14,-134 113.14,-134 113.14,-140 107.14,-146 101.14,-146"/>
+<text xml:space="preserve" text-anchor="middle" x="66.57" y="-124.7" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#1e1b4b">m_0001_initial</text>
+</g>
+<!-- n2 -->
+<g id="node3" class="node">
+<title>n2</title>
+<path fill="#eef2ff" stroke="#4c51bf" d="M101.14,-240C101.14,-240 32,-240 32,-240 26,-240 20,-234 20,-228 20,-228 20,-216 20,-216 20,-210 26,-204 32,-204 32,-204 101.14,-204 101.14,-204 107.14,-204 113.14,-210 113.14,-216 113.14,-216 113.14,-228 113.14,-228 113.14,-234 107.14,-240 101.14,-240"/>
+<text xml:space="preserve" text-anchor="middle" x="66.57" y="-218.7" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#1e1b4b">m_0001_initial</text>
+</g>
+<!-- n3 -->
+<g id="node4" class="node">
+<title>n3</title>
+<path fill="#eef2ff" stroke="#4c51bf" d="M252.56,-243.84C252.56,-243.84 168.14,-243.84 168.14,-243.84 162.14,-243.84 156.14,-237.84 156.14,-231.84 156.14,-231.84 156.14,-212.16 156.14,-212.16 156.14,-206.16 162.14,-200.16 168.14,-200.16 168.14,-200.16 252.56,-200.16 252.56,-200.16 258.56,-200.16 264.56,-206.16 264.56,-212.16 264.56,-212.16 264.56,-231.84 264.56,-231.84 264.56,-237.84 258.56,-243.84 252.56,-243.84"/>
+<text xml:space="preserve" text-anchor="middle" x="210.35" y="-225.3" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#1e1b4b">m_0002_auto</text>
+<text xml:space="preserve" text-anchor="middle" x="210.35" y="-212.1" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#1e1b4b">20261108_213630</text>
+</g>
+<!-- n2&#45;&gt;n3 -->
+<g id="edge1" class="edge">
+<title>n2-&gt;n3</title>
+<path fill="none" stroke="#9aa5b1" stroke-width="1.2" d="M113.6,-222C123.98,-222 135.18,-222 146.13,-222"/>
+<polygon fill="#9aa5b1" stroke="#9aa5b1" stroke-width="1.2" points="145.84,-224.8 153.84,-222 145.84,-219.2 145.84,-224.8"/>
+</g>
+<!-- n4 -->
+<g id="node5" class="node">
+<title>n4</title>
+<path fill="#eef2ff" stroke="#4c51bf" d="M403.98,-243.84C403.98,-243.84 319.56,-243.84 319.56,-243.84 313.56,-243.84 307.56,-237.84 307.56,-231.84 307.56,-231.84 307.56,-212.16 307.56,-212.16 307.56,-206.16 313.56,-200.16 319.56,-200.16 319.56,-200.16 403.98,-200.16 403.98,-200.16 409.98,-200.16 415.98,-206.16 415.98,-212.16 415.98,-212.16 415.98,-231.84 415.98,-231.84 415.98,-237.84 409.98,-243.84 403.98,-243.84"/>
+<text xml:space="preserve" text-anchor="middle" x="361.77" y="-225.3" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#1e1b4b">m_0003_auto</text>
+<text xml:space="preserve" text-anchor="middle" x="361.77" y="-212.1" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#1e1b4b">20261108_213903</text>
+</g>
+<!-- n3&#45;&gt;n4 -->
+<g id="edge2" class="edge">
+<title>n3-&gt;n4</title>
+<path fill="none" stroke="#9aa5b1" stroke-width="1.2" d="M264.87,-222C275.39,-222 286.51,-222 297.31,-222"/>
+<polygon fill="#9aa5b1" stroke="#9aa5b1" stroke-width="1.2" points="297.3,-224.8 305.3,-222 297.3,-219.2 297.3,-224.8"/>
+</g>
+</g>
+</svg>
