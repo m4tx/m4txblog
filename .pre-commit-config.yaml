@@ -69,7 +69,7 @@ repos:
         types: [text]
 
   - repo: https://github.com/oxipng/oxipng
-    rev: v9.1.4
+    rev: v10.2.1
     hooks:
       - id: oxipng
         args: ["-o", "max", "--strip", "safe", "--alpha"]
