@@ -2,6 +2,7 @@
 title: "Cot v0.8: Lazily Transactional"
 permalink: "cot-v08-lazily-transactional"
 date: 2026-11-09 19:30:00+0000
+reddit_link: https://www.reddit.com/r/rust/s/rPFHrq4Dch
 ---
 
 Following up on [our previous announcement](/blog/cot-v07-lazily-thorough/), Cot v0.8 is here! This is one of the biggest releases so far: the ORM gets transactions, ordering, pattern matching, raw SQL, and migration rollbacks, the router has been rewritten from scratch, and the CLI got a lot smarter. Let's dig in.
